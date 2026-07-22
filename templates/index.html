@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creative Block Diagnostic</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ── Quiz ─────────────────────────────────────────────────────────────── -->
+  <section id="quiz-section">
+    <header class="quiz-header">
+      <h1>Creative Block Diagnostic</h1>
+      <p class="subtitle">5 questions. Specific answer. No generic advice.</p>
+    </header>
+
+    <form id="quiz-form" novalidate>
+
+      {% for q in questions %}
+      <fieldset class="question-block" id="block-{{ q.id }}" data-qid="{{ q.id }}">
+        <legend class="question-text">
+          <span class="q-num">{{ loop.index }}/{{ questions|length }}</span>
+          {{ q.text }}
+        </legend>
+        <ul class="options-list" role="radiogroup">
+          {% for opt in q.options %}
+          <li>
+            <label class="option-label">
+              <input type="radio"
+                     name="{{ q.id }}"
+                     value="{{ loop.index0 }}"
+                     required />
+              <span class="option-text">{{ opt.text }}</span>
+            </label>
+          </li>
+          {% endfor %}
+        </ul>
+      </fieldset>
+      {% endfor %}
+
+      <div class="context-block">
+        <label for="context-input" class="context-label">
+          Optional: briefly describe your specific situation
+          <span class="context-hint">(helps personalise your exercise if AI is enabled)</span>
+        </label>
+        <textarea id="context-input"
+                  name="context"
+                  rows="3"
+                  maxlength="500"
+                  placeholder="e.g. I'm halfway through a short-story collection and keep abandoning each piece…"></textarea>
+      </div>
+
+      <div class="submit-row">
+        <button type="submit" id="submit-btn" class="btn-primary" disabled>
+          Diagnose my block
+        </button>
+        <span id="submit-hint" class="submit-hint">Answer all 5 questions to continue</span>
+      </div>
+
+    </form>
+  </section>
+
+  <!-- ── Result ────────────────────────────────────────────────────────────── -->
+  <section id="result-section" hidden aria-live="polite">
+
+    <div class="result-card">
+      <div class="result-header">
+        <p class="result-eyebrow">Your creative block is</p>
+        <h2 id="result-name" class="result-name"></h2>
+      </div>
+
+      <div class="result-description-wrap">
+        <h3 class="section-label">What's happening</h3>
+        <p id="result-description" class="result-description"></p>
+      </div>
+
+      <div class="result-exercise-wrap">
+        <h3 class="section-label">Your exercise</h3>
+        <p id="result-exercise" class="result-exercise"></p>
+        <p id="result-personalization" class="result-personalization"></p>
+      </div>
+
+      <div id="result-secondary-wrap" class="result-secondary-wrap" hidden>
+        <p class="secondary-note">
+          Your answers also show signs of
+          <strong id="result-secondary-name"></strong> —
+          if this exercise doesn't land, that may be worth exploring next.
+        </p>
+      </div>
+
+      <button id="retake-btn" class="btn-secondary">
+        Retake the quiz
+      </button>
+    </div>
+
+  </section>
+
+  <!-- ── Error banner ──────────────────────────────────────────────────────── -->
+  <div id="error-banner" class="error-banner" hidden role="alert">
+    <span id="error-message"></span>
+    <button id="error-dismiss" class="error-dismiss" aria-label="Dismiss">✕</button>
+  </div>
+
+</div><!-- .shell -->
+
+<script src="/static/quiz.js"></script>
+</body>
+</html>
