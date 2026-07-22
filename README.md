@@ -1,8 +1,27 @@
+![Python](https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
+![Built with IBM watsonx](https://img.shields.io/badge/built%20with-IBM%20watsonx-054ADA?logo=ibm&logoColor=white)
+
 # Creative Block Diagnostic
 
 A small Flask web app that helps you figure out *why* you're creatively stuck and gives you one specific exercise to get unstuck.
 
 Answer five questions, receive a scored diagnosis across five block categories, and get a targeted exercise to break through — with optional AI-powered personalisation via IBM watsonx.
+
+---
+
+## Built with IBM Bob
+
+This project was scaffolded and built end-to-end with **[IBM Bob](https://www.ibm.com/products/bob)**, an AI software engineer. Specifically, Bob:
+
+- **Scaffolded the Flask application** — created [`app.py`](app.py) with the `GET /` and `POST /diagnose` routes, request parsing, and response shaping
+- **Wrote the scoring engine** — designed and implemented [`diagnostic.py`](diagnostic.py), including the weighted category scoring, primary/secondary ranking logic, tie-breaking, and the all-zero fallback
+- **Authored the question bank** — wrote all five quiz questions and their weighted answer options in [`questions.py`](questions.py), calibrated so each block category is reliably identifiable from a five-question sweep
+- **Defined the intervention library** — wrote all five block descriptions and concrete exercises in [`interventions.py`](interventions.py), including the no-toxic-positivity framing for the fatigue entry
+- **Wired up the watsonx integration** — built [`llm_client.py`](llm_client.py) with the Granite prompt templates, credential handling, offline fallback logic, and graceful error recovery so the app never raises on LLM failure
+- **Built the quiz UI** — created the single-page HTML/CSS/JS front end in [`templates/index.html`](templates/index.html), including the question renderer, fetch-based form submission, and results display
+- **Wrote the test suite** — authored [`_run_tests.py`](_run_tests.py) covering unit tests for scoring, interventions completeness, and the offline LLM path, plus Flask integration tests for all route behaviours
+- **Added project documentation** — wrote this README and the MIT [LICENSE](LICENSE)
 
 ---
 
@@ -28,11 +47,19 @@ Answer five questions, receive a scored diagnosis across five block categories, 
 
 ---
 
+## Screenshots
+
+| Quiz | Diagnosis |
+|---|---|
+| ![Quiz screenshot](screenshots/quiz.png) | ![Result screenshot](screenshots/result.png) |
+
+---
+
 ## Quick start
 
 ```bash
 # 1. Clone and create a virtual environment
-git clone https://github.com/<your-username>/creative-block-diagnostic.git
+git clone https://github.com/kellermanj2-eng/creative-block-diagnostic.git
 cd creative-block-diagnostic
 python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
