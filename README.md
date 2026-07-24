@@ -42,8 +42,8 @@ This project was scaffolded and built end-to-end with **[IBM Bob](https://www.ib
 - **Scored quiz** — five weighted questions map answers to block categories
 - **Primary + secondary diagnosis** — secondary is surfaced if it scores within 25 % of primary
 - **Concrete exercises** — one specific, actionable exercise per block type (no vague advice)
-- **Optional personalisation** — if you describe your specific situation, IBM watsonx Granite generates a 1–2 sentence note connecting your context to the exercise
-- **Offline-first** — runs completely without credentials; watsonx is opt-in
+- **AI personalisation via IBM watsonx Granite** — if you describe your specific situation, `ibm/granite-3-3-8b-instruct` generates a 1–2 sentence note connecting your context to the exercise. This integration has been verified end-to-end with real credentials.
+- **Offline-first** — runs completely without credentials; watsonx personalisation gracefully falls back to a template-based note when disabled or unavailable
 
 ---
 
@@ -67,9 +67,10 @@ source .venv/bin/activate      # Windows: .venv\Scripts\activate
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Configure environment (optional — needed only for watsonx)
+# 3. Configure environment (optional — needed only for AI personalisation)
 cp .env.example .env
-# Edit .env and set WATSONX_ENABLED=true + your credentials
+# Edit .env: set WATSONX_ENABLED=true and fill in your IBM Cloud credentials
+# The app runs fully offline without this step
 
 # 4. Run the app
 python app.py
@@ -81,7 +82,7 @@ Open [http://localhost:5000](http://localhost:5000) in your browser.
 
 ## Environment variables
 
-Copy `.env.example` to `.env`. All variables are optional — the app runs fully offline without any of them.
+Copy `.env.example` to `.env`. All variables are optional — the app runs fully offline without any of them. The watsonx integration has been tested end-to-end and works with `ibm/granite-3-3-8b-instruct` on IBM Cloud.
 
 | Variable | Default | Description |
 |---|---|---|
