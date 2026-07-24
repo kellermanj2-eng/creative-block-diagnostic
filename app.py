@@ -97,6 +97,9 @@ def diagnose_route():
             "secondary": result.secondary,
             "secondary_name": secondary_name,
             "scores": result.scores,
+            "confidence": result.confidence,
+            "confidence_score": result.confidence_score,
+            "contributing_answers": result.contributing_answers,
         }
     )
 

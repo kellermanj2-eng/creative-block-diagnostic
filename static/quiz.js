@@ -13,6 +13,9 @@
   const resultDesc   = document.getElementById('result-description');
   const resultExercise = document.getElementById('result-exercise');
   const resultPersonalization = document.getElementById('result-personalization');
+  const resultConfidence = document.getElementById('result-confidence');
+  const resultContributingWrap = document.getElementById('result-contributing-wrap');
+  const resultContributingText = document.getElementById('result-contributing-text');
   const resultSecondaryWrap = document.getElementById('result-secondary-wrap');
   const resultSecondaryName = document.getElementById('result-secondary-name');
   const retakeBtn    = document.getElementById('retake-btn');
@@ -84,6 +87,32 @@
     resultDesc.textContent    = data.primary_description;
     resultExercise.textContent = data.exercise;
     resultPersonalization.textContent = data.personalization || '';
+
+    // Confidence badge
+    var confLabel = data.confidence || '';
+    var confClass = confLabel.startsWith('high') ? 'high'
+                  : confLabel.startsWith('moderate') ? 'moderate'
+                  : 'mixed';
+    resultConfidence.textContent = confLabel;
+    resultConfidence.className = 'confidence-badge ' + confClass;
+
+    // Contributing answers
+    var contributors = data.contributing_answers || [];
+    if (contributors.length > 0) {
+      var qNums = contributors.map(function (c) {
+        // Extract the question number from the qid (e.g. "q3" → "3")
+        var num = c.qid.replace(/\D/g, '');
+        return 'Q' + num;
+      });
+      var qList = qNums.length === 1
+        ? qNums[0]
+        : qNums.slice(0, -1).join(', ') + ' and ' + qNums[qNums.length - 1];
+      resultContributingText.textContent =
+        'Your answers to ' + qList + ' were the strongest signal for this diagnosis.';
+      resultContributingWrap.hidden = false;
+    } else {
+      resultContributingWrap.hidden = true;
+    }
 
     if (data.secondary && data.secondary_name) {
       resultSecondaryName.textContent = data.secondary_name;

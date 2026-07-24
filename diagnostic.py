@@ -9,14 +9,21 @@ diagnose(answers: dict[str, int]) -> DiagnosisResult
              Missing questions are simply skipped; partial submissions work.
 
   returns  – DiagnosisResult with:
-               primary   : str   – category with highest weighted score
-               secondary : str | None  – second category if it scores
-                                         within 25 % of the primary
-               scores    : dict[str, float]  – raw scores for all categories
+               primary              : str   – category with highest weighted score
+               secondary            : str | None  – second category if it scores
+                                                    within 25 % of the primary
+               scores               : dict[str, float]  – raw scores for all categories
+               confidence           : str   – "high confidence" | "moderate confidence"
+                                             | "mixed signals"
+               confidence_score     : float – 0.0 (all signal) → 1.0 (evenly spread)
+               contributing_answers : list[dict] – top 2-3 questions that most drove
+                                                   the primary category, each with
+                                                   {qid, question_text, weight}
 """
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -28,6 +35,9 @@ class DiagnosisResult:
     primary: str
     secondary: Optional[str]
     scores: dict[str, float] = field(default_factory=dict)
+    confidence: str = "mixed signals"
+    confidence_score: float = 1.0
+    contributing_answers: list[dict] = field(default_factory=list)
 
 
 # Index questions by id for O(1) lookup.
@@ -35,6 +45,20 @@ _QUESTION_MAP = {q["id"]: q for q in QUESTIONS}
 
 # Threshold: secondary is reported only if it reaches this fraction of primary.
 _SECONDARY_THRESHOLD = 0.75  # i.e. within 25 % of primary
+
+# Number of categories — used for entropy normalisation.
+_N_CATEGORIES = len(CATEGORIES)  # 5
+
+# Maximum possible Shannon entropy for _N_CATEGORIES equally-weighted categories.
+_MAX_ENTROPY = math.log(_N_CATEGORIES)  # log(5) ≈ 1.609
+
+# Confidence label thresholds (normalised entropy, 0-1).
+_HIGH_CONF_THRESHOLD     = 0.40   # normalised entropy ≤ 0.40 → high confidence
+_MODERATE_CONF_THRESHOLD = 0.70   # normalised entropy ≤ 0.70 → moderate confidence
+                                   # above 0.70             → mixed signals
+
+# How many top contributing questions to surface.
+_TOP_N_CONTRIBUTORS = 3
 
 
 def diagnose(answers: dict[str, int]) -> DiagnosisResult:
@@ -54,6 +78,10 @@ def diagnose(answers: dict[str, int]) -> DiagnosisResult:
     """
     scores: dict[str, float] = {cat: 0.0 for cat in CATEGORIES}
 
+    # Per-question contribution tracking: list of (qid, question_text, category, points)
+    # One entry per (question, category) pair that received > 0 weight.
+    contributions: list[tuple[str, str, str, float]] = []
+
     for qid, option_idx in answers.items():
         question = _QUESTION_MAP.get(qid)
         if question is None:
@@ -67,13 +95,76 @@ def diagnose(answers: dict[str, int]) -> DiagnosisResult:
         for category, points in chosen_weights.items():
             if category in scores:
                 scores[category] += points
+                contributions.append((qid, question["text"], category, float(points)))
 
-    return _rank(scores)
+    return _rank(scores, contributions)
 
 
-def _rank(scores: dict[str, float]) -> DiagnosisResult:
+def _confidence_from_scores(scores: dict[str, float]) -> tuple[float, str]:
     """
-    Given raw category scores, determine primary and optional secondary.
+    Compute a normalised Shannon entropy (0-1) from raw category scores
+    and return (confidence_score, confidence_label).
+
+    0.0 = all weight in one category (maximum confidence).
+    1.0 = perfectly even across all categories (minimum confidence / mixed signals).
+    """
+    total = sum(scores.values())
+    if total == 0:
+        # No signal at all — treat as maximum uncertainty.
+        return 1.0, "mixed signals"
+
+    # Probability distribution over categories.
+    probs = [s / total for s in scores.values() if s > 0]
+
+    # Shannon entropy H = -Σ p·log(p).
+    entropy = -sum(p * math.log(p) for p in probs)
+
+    # Normalise to [0, 1] relative to the maximum possible entropy.
+    # abs() eliminates -0.0 from floating-point arithmetic on single-category inputs.
+    normalised = abs(entropy / _MAX_ENTROPY)
+
+    if normalised <= _HIGH_CONF_THRESHOLD:
+        label = "high confidence"
+    elif normalised <= _MODERATE_CONF_THRESHOLD:
+        label = "moderate confidence"
+    else:
+        label = "mixed signals"
+
+    return round(normalised, 4), label
+
+
+def _top_contributors(
+    primary: str,
+    contributions: list[tuple[str, str, str, float]],
+) -> list[dict]:
+    """
+    From all per-question weight contributions, return the top
+    _TOP_N_CONTRIBUTORS entries that fed into *primary*, as a list of
+    {qid, question_text, weight} dicts.
+
+    Ties are broken by qid (alphabetical) for determinism.
+    """
+    # Filter to primary category only, then aggregate per question.
+    agg: dict[str, dict] = {}
+    for qid, qtext, category, points in contributions:
+        if category != primary:
+            continue
+        if qid not in agg:
+            agg[qid] = {"qid": qid, "question_text": qtext, "weight": 0.0}
+        agg[qid]["weight"] += points
+
+    # Sort by weight descending, then qid ascending for tie-breaking.
+    ranked = sorted(agg.values(), key=lambda d: (-d["weight"], d["qid"]))
+    return ranked[:_TOP_N_CONTRIBUTORS]
+
+
+def _rank(
+    scores: dict[str, float],
+    contributions: list[tuple[str, str, str, float]],
+) -> DiagnosisResult:
+    """
+    Given raw category scores and per-question contributions, determine
+    primary, secondary, confidence, and contributing_answers.
 
     Rules
     -----
@@ -91,7 +182,14 @@ def _rank(scores: dict[str, float]) -> DiagnosisResult:
 
     # All-zero edge case: every answer was skipped or no answers provided.
     if primary_score == 0:
-        return DiagnosisResult(primary="possibility", secondary=None, scores=scores)
+        return DiagnosisResult(
+            primary="possibility",
+            secondary=None,
+            scores=scores,
+            confidence="mixed signals",
+            confidence_score=1.0,
+            contributing_answers=[],
+        )
 
     secondary_name: Optional[str] = None
     if len(ranked) > 1:
@@ -99,8 +197,14 @@ def _rank(scores: dict[str, float]) -> DiagnosisResult:
         if second_score >= _SECONDARY_THRESHOLD * primary_score:
             secondary_name = second_name
 
+    confidence_score, confidence_label = _confidence_from_scores(scores)
+    top_contributors = _top_contributors(primary_name, contributions)
+
     return DiagnosisResult(
         primary=primary_name,
         secondary=secondary_name,
         scores=scores,
+        confidence=confidence_label,
+        confidence_score=confidence_score,
+        contributing_answers=top_contributors,
     )
