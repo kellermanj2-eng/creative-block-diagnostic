@@ -5,7 +5,7 @@ Public API
 ----------
 diagnose(answers: dict[str, int]) -> DiagnosisResult
 
-  answers  – maps question id (e.g. "q1") to the chosen option index (0-4).
+  answers  – maps question id (e.g. "q1") to the chosen option index (0-9).
              Missing questions are simply skipped; partial submissions work.
 
   returns  – DiagnosisResult with:

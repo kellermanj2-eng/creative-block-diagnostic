@@ -162,4 +162,134 @@ QUESTIONS: list[Question] = [
             },
         ],
     },
+    {
+        "id": "q6",
+        "text": "When you get feedback or look at someone else's finished work, how do you feel?",
+        "options": [
+            {
+                "text": "Envious of their focus — I wish I could just pick one thing and stick with it.",
+                "weights": {"possibility": 4},
+            },
+            {
+                "text": "Hollow. Their work matters; mine doesn't seem to.",
+                "weights": {"purpose": 4},
+            },
+            {
+                "text": "Inspired but intimidated — I can see the technique I'm missing.",
+                "weights": {"skill_gap": 4},
+            },
+            {
+                "text": "Numb. I can barely engage with other people's work right now.",
+                "weights": {"fatigue": 4},
+            },
+            {
+                "text": "Defensive or deflated — I compare and always come up short.",
+                "weights": {"judgment": 4, "purpose": 1},
+            },
+        ],
+    },
+    {
+        "id": "q7",
+        "text": "If you had a completely free afternoon with no obligations, what would happen with your project?",
+        "options": [
+            {
+                "text": "I'd probably spend it researching new directions instead of actually making anything.",
+                "weights": {"possibility": 4},
+            },
+            {
+                "text": "I'd avoid it. The free time would just remind me I don't know why I'm doing this.",
+                "weights": {"purpose": 4, "fatigue": 1},
+            },
+            {
+                "text": "I'd work on it, hit a wall quickly, and spend the rest of the time frustrated.",
+                "weights": {"skill_gap": 4},
+            },
+            {
+                "text": "I'd intend to work, then rest instead — and feel guilty about it.",
+                "weights": {"fatigue": 4},
+            },
+            {
+                "text": "I'd tinker but not commit anything. It wouldn't feel ready to be seen — even by me.",
+                "weights": {"judgment": 4, "possibility": 1},
+            },
+        ],
+    },
+    {
+        "id": "q8",
+        "text": "How do you feel about the last creative thing you actually completed?",
+        "options": [
+            {
+                "text": "Like it was the wrong choice — I should have gone in a different direction.",
+                "weights": {"possibility": 4, "judgment": 1},
+            },
+            {
+                "text": "Indifferent. I finished it but can't remember why it seemed worth doing.",
+                "weights": {"purpose": 4},
+            },
+            {
+                "text": "Disappointed — it doesn't match what I had in my head.",
+                "weights": {"skill_gap": 4},
+            },
+            {
+                "text": "Relieved it's over more than proud of it. The process drained me.",
+                "weights": {"fatigue": 4, "purpose": 1},
+            },
+            {
+                "text": "I'm already embarrassed by it. I notice everything that's wrong with it.",
+                "weights": {"judgment": 4},
+            },
+        ],
+    },
+    {
+        "id": "q9",
+        "text": "What usually breaks your focus mid-session?",
+        "options": [
+            {
+                "text": "A better idea — I get distracted by a new direction that seems more promising.",
+                "weights": {"possibility": 4},
+            },
+            {
+                "text": "A creeping sense that this isn't going anywhere meaningful.",
+                "weights": {"purpose": 4, "judgment": 1},
+            },
+            {
+                "text": "Hitting a specific technical obstacle I don't know how to get past.",
+                "weights": {"skill_gap": 4},
+            },
+            {
+                "text": "Physical tiredness or mental fog — I can feel my capacity running out.",
+                "weights": {"fatigue": 4},
+            },
+            {
+                "text": "Rereading or reviewing what I've done and deciding it's not good enough.",
+                "weights": {"judgment": 4, "possibility": 1},
+            },
+        ],
+    },
+    {
+        "id": "q10",
+        "text": "What would it mean to you if this project were never finished?",
+        "options": [
+            {
+                "text": "Fine, honestly — I'd probably just start something else. I always do.",
+                "weights": {"possibility": 4},
+            },
+            {
+                "text": "Nothing. I already suspect it wouldn't have mattered.",
+                "weights": {"purpose": 4},
+            },
+            {
+                "text": "Frustrating — I know it could be good, I just can't get it there.",
+                "weights": {"skill_gap": 4, "judgment": 1},
+            },
+            {
+                "text": "Honestly, a relief. I don't have the reserves for it right now.",
+                "weights": {"fatigue": 4},
+            },
+            {
+                "text": "Secretly relieved — it can't be judged if it's never done.",
+                "weights": {"judgment": 4, "purpose": 1},
+            },
+        ],
+    },
 ]

@@ -39,7 +39,7 @@ This project was scaffolded and built end-to-end with **[IBM Bob](https://www.ib
 
 ## Features
 
-- **Scored quiz** — five weighted questions map answers to block categories
+- **Scored quiz** — ten weighted questions map answers to block categories
 - **Primary + secondary diagnosis** — secondary is surfaced if it scores within 25 % of primary
 - **Concrete exercises** — one specific, actionable exercise per block type (no vague advice)
 - **AI personalisation via IBM watsonx Granite** — if you describe your specific situation, `ibm/granite-3-3-8b-instruct` generates a 1–2 sentence note connecting your context to the exercise. This integration has been verified end-to-end with real credentials.
