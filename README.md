@@ -6,7 +6,7 @@
 
 A small Flask web app that helps you figure out *why* you're creatively stuck and gives you one specific exercise to get unstuck.
 
-Answer five questions, receive a scored diagnosis across five block categories, and get a targeted exercise to break through — with optional AI-powered personalisation via IBM watsonx.
+Answer five questions, receive a scored diagnosis across five block categories, and get a targeted exercise to break through — with AI-powered personalisation via IBM watsonx Granite, verified working end-to-end (and gracefully offline when credentials aren't provided).
 
 ---
 
