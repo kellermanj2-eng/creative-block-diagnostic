@@ -382,7 +382,8 @@ textarea:focus {
 }
 
 /* ── Error banner ─────────────────────────────────────────────────────────── */
-.error-banner {
+/* Use [hidden] selector so display:flex doesn't override the hidden attribute */
+.error-banner:not([hidden]) {
   position: fixed;
   bottom: 1.5rem;
   left: 50%;
