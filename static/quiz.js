@@ -8,6 +8,11 @@
   const submitHint  = document.getElementById('submit-hint');
   const quizSection = document.getElementById('quiz-section');
   const resultSection = document.getElementById('result-section');
+  const followupSection = document.getElementById('followup-section');
+  const followupForm = document.getElementById('followup-form');
+  const followupContainer = document.getElementById('followup-questions-container');
+  const followupSubmitBtn = document.getElementById('followup-submit-btn');
+  const followupHint = document.getElementById('followup-hint');
 
   const resultName   = document.getElementById('result-name');
   const resultDesc   = document.getElementById('result-description');
@@ -28,7 +33,11 @@
   const answered = new Set();
   const totalQuestions = document.querySelectorAll('.question-block').length;
 
-  // ── Answer tracking ────────────────────────────────────────────────────────
+  // Preserve round-1 answers + context across the two-round flow.
+  var savedAnswers = null;
+  var savedContext = '';
+
+  // ── Answer tracking (main quiz) ────────────────────────────────────────────
   form.addEventListener('change', function (e) {
     if (e.target.type !== 'radio') return;
 
@@ -43,7 +52,25 @@
     submitHint.hidden = allAnswered;
   });
 
-  // ── Form submission ────────────────────────────────────────────────────────
+  // ── Follow-up answer tracking ──────────────────────────────────────────────
+  var followupAnswered = new Set();
+  var followupTotal = 0;
+
+  followupForm.addEventListener('change', function (e) {
+    if (e.target.type !== 'radio') return;
+
+    const block = e.target.closest('.question-block');
+    if (block) {
+      block.classList.add('answered');
+      followupAnswered.add(block.dataset.qid);
+    }
+
+    const allAnswered = followupAnswered.size === followupTotal;
+    followupSubmitBtn.disabled = !allAnswered;
+    followupHint.hidden = allAnswered;
+  });
+
+  // ── Main form submission (round 1) ─────────────────────────────────────────
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
     hideError();
@@ -57,6 +84,10 @@
 
     const context = (document.getElementById('context-input').value || '').trim();
 
+    // Save for potential round 2.
+    savedAnswers = answers;
+    savedContext = context;
+
     submitBtn.disabled = true;
     submitBtn.textContent = 'Diagnosing…';
 
@@ -64,11 +95,63 @@
       const res = await fetch('/diagnose', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers, context }),
+        body: JSON.stringify({ answers: answers, context: context }),
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
+        const err = await res.json().catch(function () { return {}; });
+        throw new Error(err.error || 'Server error (' + res.status + ')');
+      }
+
+      const data = await res.json();
+
+      if (data.needs_followup) {
+        showFollowup(data.followup_questions);
+      } else {
+        showResult(data);
+      }
+    } catch (err) {
+      showError(err.message || 'Something went wrong. Please try again.');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Diagnose my block';
+    }
+  });
+
+  // ── Follow-up form submission (round 2) ────────────────────────────────────
+  followupForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    hideError();
+
+    // Validate all follow-up questions are answered.
+    var allAnswered = followupAnswered.size === followupTotal;
+    if (!allAnswered) {
+      showError('Please answer all questions to continue.');
+      return;
+    }
+
+    const followupAnswers = {};
+    followupContainer.querySelectorAll('.question-block').forEach(function (block) {
+      const qid = block.dataset.qid;
+      const checked = block.querySelector('input[type="radio"]:checked');
+      if (checked) followupAnswers[qid] = parseInt(checked.value, 10);
+    });
+
+    followupSubmitBtn.disabled = true;
+    followupSubmitBtn.textContent = 'Diagnosing…';
+
+    try {
+      const res = await fetch('/diagnose', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          answers: savedAnswers,
+          context: savedContext,
+          followup_answers: followupAnswers,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(function () { return {}; });
         throw new Error(err.error || 'Server error (' + res.status + ')');
       }
 
@@ -76,10 +159,67 @@
       showResult(data);
     } catch (err) {
       showError(err.message || 'Something went wrong. Please try again.');
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Diagnose my block';
+      followupSubmitBtn.disabled = false;
+      followupSubmitBtn.textContent = 'Get my diagnosis';
     }
   });
+
+  // ── Render follow-up questions ─────────────────────────────────────────────
+  function showFollowup(questions) {
+    followupContainer.innerHTML = '';
+    followupAnswered.clear();
+    followupTotal = questions.length;
+    followupSubmitBtn.disabled = true;
+    followupHint.hidden = false;
+
+    questions.forEach(function (q, idx) {
+      var fieldset = document.createElement('fieldset');
+      fieldset.className = 'question-block';
+      fieldset.id = 'block-' + q.id;
+      fieldset.dataset.qid = q.id;
+
+      var legend = document.createElement('legend');
+      legend.className = 'question-text';
+      var numSpan = document.createElement('span');
+      numSpan.className = 'q-num';
+      numSpan.textContent = (idx + 1) + '/' + questions.length;
+      legend.appendChild(numSpan);
+      legend.appendChild(document.createTextNode(' ' + q.text));
+      fieldset.appendChild(legend);
+
+      var ul = document.createElement('ul');
+      ul.className = 'options-list';
+      ul.setAttribute('role', 'radiogroup');
+
+      q.options.forEach(function (opt, optIdx) {
+        var li = document.createElement('li');
+        var label = document.createElement('label');
+        label.className = 'option-label';
+
+        var radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = q.id;
+        radio.value = String(optIdx);
+        radio.required = true;
+
+        var span = document.createElement('span');
+        span.className = 'option-text';
+        span.textContent = opt.text;
+
+        label.appendChild(radio);
+        label.appendChild(span);
+        li.appendChild(label);
+        ul.appendChild(li);
+      });
+
+      fieldset.appendChild(ul);
+      followupContainer.appendChild(fieldset);
+    });
+
+    quizSection.hidden = true;
+    followupSection.hidden = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   // ── Render result ──────────────────────────────────────────────────────────
   function showResult(data) {
@@ -100,7 +240,6 @@
     var contributors = data.contributing_answers || [];
     if (contributors.length > 0) {
       var qNums = contributors.map(function (c) {
-        // Extract the question number from the qid (e.g. "q3" → "3")
         var num = c.qid.replace(/\D/g, '');
         return 'Q' + num;
       });
@@ -122,6 +261,7 @@
     }
 
     quizSection.hidden  = true;
+    followupSection.hidden = true;
     resultSection.hidden = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -130,13 +270,19 @@
   retakeBtn.addEventListener('click', function () {
     form.reset();
     answered.clear();
-    document.querySelectorAll('.question-block').forEach(function (b) {
+    savedAnswers = null;
+    savedContext = '';
+    followupAnswered.clear();
+    followupTotal = 0;
+    followupContainer.innerHTML = '';
+    document.querySelectorAll('#quiz-form .question-block').forEach(function (b) {
       b.classList.remove('answered');
     });
     submitBtn.disabled = true;
     submitBtn.textContent = 'Diagnose my block';
     submitHint.hidden = false;
     resultSection.hidden = true;
+    followupSection.hidden = true;
     quizSection.hidden   = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });

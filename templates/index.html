@@ -63,6 +63,23 @@
     </form>
   </section>
 
+  <!-- ── Follow-up questions ──────────────────────────────────────────────── -->
+  <section id="followup-section" hidden aria-live="polite">
+    <div class="quiz-header">
+      <h2>A couple more questions to sharpen your diagnosis…</h2>
+      <p class="subtitle">Your answers so far are split between two patterns. Two quick questions will make the result more accurate.</p>
+    </div>
+    <form id="followup-form" novalidate>
+      <div id="followup-questions-container"></div>
+      <div class="submit-row">
+        <button type="submit" id="followup-submit-btn" class="btn-primary" disabled>
+          Get my diagnosis
+        </button>
+        <span id="followup-hint" class="submit-hint">Answer all questions to continue</span>
+      </div>
+    </form>
+  </section>
+
   <!-- ── Result ────────────────────────────────────────────────────────────── -->
   <section id="result-section" hidden aria-live="polite">
 

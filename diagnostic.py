@@ -35,7 +35,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Optional
 
-from questions import CATEGORIES, QUESTIONS
+from questions import CATEGORIES, FOLLOWUP_QUESTIONS, QUESTIONS
 
 
 @dataclass
@@ -74,7 +74,35 @@ _MODERATE_CONF_THRESHOLD = 0.70   # normalised entropy ≤ 0.70 → moderate con
 _TOP_N_CONTRIBUTORS = 3
 
 
-def diagnose(answers: dict[str, int], user_context: str = "") -> DiagnosisResult:
+# Index follow-up questions by id for O(1) lookup during scoring.
+_FOLLOWUP_QUESTION_MAP: dict[str, dict] = {
+    q["id"]: q
+    for questions in FOLLOWUP_QUESTIONS.values()
+    for q in questions
+}
+
+
+def get_followup_questions(result: DiagnosisResult) -> list[dict]:
+    """
+    Return 1–2 follow-up questions that disambiguate the top-2 categories
+    when confidence is "mixed signals", or [] otherwise.
+    """
+    if result.confidence != "mixed signals":
+        return []
+
+    ranked = sorted(result.scores.items(), key=lambda kv: (-kv[1], kv[0]))
+    if len(ranked) < 2 or ranked[0][1] == 0:
+        return []
+
+    top_two = frozenset({ranked[0][0], ranked[1][0]})
+    return list(FOLLOWUP_QUESTIONS.get(top_two, []))
+
+
+def diagnose(
+    answers: dict[str, int],
+    user_context: str = "",
+    followup_answers: dict[str, int] | None = None,
+) -> DiagnosisResult:
     """
     Score the submitted answers and return a DiagnosisResult.
 
@@ -89,6 +117,10 @@ def diagnose(answers: dict[str, int], user_context: str = "") -> DiagnosisResult
         and watsonx is available, a small secondary adjustment (capped at
         _CONTEXT_MAX_BOOST pts per category) is applied on top of the quiz
         scores before ranking.  Safe to omit; falls back to pure quiz scoring.
+    followup_answers : dict[str, int] | None, optional
+        Maps follow-up question id to chosen option index.  Weights are
+        accumulated on top of the primary quiz scores before re-ranking.
+        An empty dict is treated as no follow-up (scores unchanged).
 
     Returns
     -------
@@ -100,20 +132,29 @@ def diagnose(answers: dict[str, int], user_context: str = "") -> DiagnosisResult
     # One entry per (question, category) pair that received > 0 weight.
     contributions: list[tuple[str, str, str, float]] = []
 
-    for qid, option_idx in answers.items():
-        question = _QUESTION_MAP.get(qid)
-        if question is None:
-            continue  # unknown question id – ignore
+    # Score primary quiz answers.
+    all_answers: list[tuple[dict[str, int], dict[str, dict]]] = [
+        (answers, _QUESTION_MAP),
+    ]
+    # Append follow-up answers (if any) using their own question map.
+    if followup_answers:
+        all_answers.append((followup_answers, _FOLLOWUP_QUESTION_MAP))
 
-        options = question["options"]
-        if not isinstance(option_idx, int) or not (0 <= option_idx < len(options)):
-            continue  # out-of-range index – ignore
+    for answer_set, question_map in all_answers:
+        for qid, option_idx in answer_set.items():
+            question = question_map.get(qid)
+            if question is None:
+                continue  # unknown question id – ignore
 
-        chosen_weights = options[option_idx]["weights"]
-        for category, points in chosen_weights.items():
-            if category in scores:
-                scores[category] += points
-                contributions.append((qid, question["text"], category, float(points)))
+            options = question["options"]
+            if not isinstance(option_idx, int) or not (0 <= option_idx < len(options)):
+                continue  # out-of-range index – ignore
+
+            chosen_weights = options[option_idx]["weights"]
+            for category, points in chosen_weights.items():
+                if category in scores:
+                    scores[category] += points
+                    contributions.append((qid, question["text"], category, float(points)))
 
     # ── Optional context boost ────────────────────────────────────────────────
     context_influence: dict[str, float] = {}

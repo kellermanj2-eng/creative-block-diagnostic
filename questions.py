@@ -293,3 +293,289 @@ QUESTIONS: list[Question] = [
         ],
     },
 ]
+
+
+# ── Follow-up question bank ───────────────────────────────────────────────────
+#
+# Keys are frozensets of two category names (order-independent lookup).
+# Values: 1–2 question dicts, same schema as QUESTIONS.
+# Weights strongly favour one or the other of the paired categories;
+# the remaining three receive minimal weight.
+# Weight scale: 0–4 (same as QUESTIONS).
+
+FOLLOWUP_QUESTIONS: dict[frozenset, list[Question]] = {
+    frozenset({"possibility", "judgment"}): [
+        {
+            "id": "fq_possibility_judgment_1",
+            "text": "When you abandon a creative direction, what is the main reason?",
+            "options": [
+                {
+                    "text": "A genuinely better idea came along and I had to follow it.",
+                    "weights": {"possibility": 4, "judgment": 0, "purpose": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "The idea felt too risky — I worried it would look foolish or amateurish.",
+                    "weights": {"judgment": 4, "possibility": 0, "purpose": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I never really commit — keeping options open feels safer than finishing.",
+                    "weights": {"possibility": 3, "judgment": 1, "purpose": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I commit but then delete it — the output never meets my standard.",
+                    "weights": {"judgment": 3, "possibility": 1, "purpose": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I lose interest quickly — no single idea grips me long enough.",
+                    "weights": {"possibility": 4, "judgment": 0, "purpose": 1, "skill_gap": 0, "fatigue": 0},
+                },
+            ],
+        },
+        {
+            "id": "fq_possibility_judgment_2",
+            "text": "You've committed to one idea and started. What happens next?",
+            "options": [
+                {
+                    "text": "I immediately second-guess whether it was the right choice.",
+                    "weights": {"possibility": 4, "judgment": 1, "purpose": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I make progress, but keep re-editing because nothing feels good enough.",
+                    "weights": {"judgment": 4, "possibility": 0, "purpose": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I make steady progress without major doubt.",
+                    "weights": {"possibility": 0, "judgment": 0, "purpose": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I finish a draft but hide it — too embarrassed to share or commit.",
+                    "weights": {"judgment": 4, "possibility": 0, "purpose": 0, "skill_gap": 0, "fatigue": 1},
+                },
+                {
+                    "text": "Another idea grabs me and I abandon the original one.",
+                    "weights": {"possibility": 4, "judgment": 0, "purpose": 0, "skill_gap": 0, "fatigue": 0},
+                },
+            ],
+        },
+    ],
+    frozenset({"possibility", "purpose"}): [
+        {
+            "id": "fq_possibility_purpose_1",
+            "text": "When you can't start your creative work, the feeling is closest to:",
+            "options": [
+                {
+                    "text": "Paralysis from too many directions — I don't know which way to go.",
+                    "weights": {"possibility": 4, "purpose": 0, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Emptiness — I don't know why I'd go any direction at all.",
+                    "weights": {"purpose": 4, "possibility": 0, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Restlessness — I want to make something, just nothing I land on feels right.",
+                    "weights": {"possibility": 3, "purpose": 1, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Meaninglessness — even a great idea wouldn't feel worth pursuing right now.",
+                    "weights": {"purpose": 4, "possibility": 0, "judgment": 0, "skill_gap": 0, "fatigue": 1},
+                },
+                {
+                    "text": "Indecision — I have options but none of them feel personally meaningful.",
+                    "weights": {"possibility": 2, "purpose": 2, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+            ],
+        },
+    ],
+    frozenset({"purpose", "fatigue"}): [
+        {
+            "id": "fq_purpose_fatigue_1",
+            "text": "If you had two full weeks off to do nothing but creative projects, you would most likely:",
+            "options": [
+                {
+                    "text": "Still not make much — time off wouldn't fix the feeling that it doesn't matter.",
+                    "weights": {"purpose": 4, "fatigue": 0, "possibility": 0, "skill_gap": 0, "judgment": 0},
+                },
+                {
+                    "text": "Recharge and come back energised — I just need rest.",
+                    "weights": {"fatigue": 4, "purpose": 0, "possibility": 0, "skill_gap": 0, "judgment": 0},
+                },
+                {
+                    "text": "Start several things with excitement, then quietly abandon them all.",
+                    "weights": {"purpose": 2, "fatigue": 1, "possibility": 1, "skill_gap": 0, "judgment": 0},
+                },
+                {
+                    "text": "Make progress, but it still wouldn't feel meaningful or satisfying.",
+                    "weights": {"purpose": 3, "fatigue": 1, "possibility": 0, "skill_gap": 0, "judgment": 0},
+                },
+                {
+                    "text": "Spend the first week sleeping, then tentatively start again.",
+                    "weights": {"fatigue": 4, "purpose": 1, "possibility": 0, "skill_gap": 0, "judgment": 0},
+                },
+            ],
+        },
+        {
+            "id": "fq_purpose_fatigue_2",
+            "text": "The last time you tried to work creatively, what stopped you?",
+            "options": [
+                {
+                    "text": "Exhaustion — my body and mind were too depleted to produce anything.",
+                    "weights": {"fatigue": 4, "purpose": 0, "possibility": 0, "skill_gap": 0, "judgment": 0},
+                },
+                {
+                    "text": "A feeling the project wasn't worth the energy, even when I had it.",
+                    "weights": {"purpose": 4, "fatigue": 0, "possibility": 0, "skill_gap": 0, "judgment": 0},
+                },
+                {
+                    "text": "Both — I was tired AND the work felt pointless.",
+                    "weights": {"purpose": 2, "fatigue": 2, "possibility": 0, "skill_gap": 0, "judgment": 0},
+                },
+                {
+                    "text": "I actually did work — it's been going okay lately.",
+                    "weights": {"purpose": 0, "fatigue": 0, "possibility": 0, "skill_gap": 0, "judgment": 0},
+                },
+                {
+                    "text": "Low-grade exhaustion that made even small decisions feel overwhelming.",
+                    "weights": {"fatigue": 3, "purpose": 1, "possibility": 0, "skill_gap": 0, "judgment": 0},
+                },
+            ],
+        },
+    ],
+    frozenset({"fatigue", "judgment"}): [
+        {
+            "id": "fq_fatigue_judgment_1",
+            "text": "After a creative session, how do you usually feel?",
+            "options": [
+                {
+                    "text": "Drained and flat — the session used up more than it gave back.",
+                    "weights": {"fatigue": 4, "judgment": 0, "possibility": 0, "skill_gap": 0, "purpose": 0},
+                },
+                {
+                    "text": "Critical of everything I made — it never reaches the standard I want.",
+                    "weights": {"judgment": 4, "fatigue": 0, "possibility": 0, "skill_gap": 0, "purpose": 0},
+                },
+                {
+                    "text": "Tired AND disappointed in the output.",
+                    "weights": {"fatigue": 2, "judgment": 2, "possibility": 0, "skill_gap": 0, "purpose": 0},
+                },
+                {
+                    "text": "Relieved it's over, regardless of how it went.",
+                    "weights": {"fatigue": 3, "judgment": 1, "possibility": 0, "skill_gap": 0, "purpose": 0},
+                },
+                {
+                    "text": "Deflated — I can see clearly how far it falls short of what I imagined.",
+                    "weights": {"judgment": 3, "fatigue": 1, "possibility": 0, "skill_gap": 0, "purpose": 0},
+                },
+            ],
+        },
+    ],
+    frozenset({"purpose", "judgment"}): [
+        {
+            "id": "fq_purpose_judgment_1",
+            "text": "When you think about sharing your creative work, the main fear is:",
+            "options": [
+                {
+                    "text": "That people will think less of me — I dread being judged.",
+                    "weights": {"judgment": 4, "purpose": 0, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "That no one will care — the work just won't matter to anyone.",
+                    "weights": {"purpose": 4, "judgment": 0, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Both — afraid it'll be criticised AND that the criticism will be right.",
+                    "weights": {"judgment": 2, "purpose": 2, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "That I'm wasting time on something irrelevant.",
+                    "weights": {"purpose": 3, "judgment": 1, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "That I'll be exposed as someone not as good as people expect.",
+                    "weights": {"judgment": 4, "purpose": 1, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+            ],
+        },
+    ],
+    frozenset({"skill_gap", "judgment"}): [
+        {
+            "id": "fq_skill_gap_judgment_1",
+            "text": "When your work doesn't turn out as you imagined, you think:",
+            "options": [
+                {
+                    "text": "'I don't have the technical skill to execute this yet.'",
+                    "weights": {"skill_gap": 4, "judgment": 0, "possibility": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "'This is embarrassing — I should be better than this.'",
+                    "weights": {"judgment": 4, "skill_gap": 0, "possibility": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "'I need to practise specific techniques to close the gap.'",
+                    "weights": {"skill_gap": 4, "judgment": 0, "possibility": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "'I'll never be able to produce what I see in my head.'",
+                    "weights": {"judgment": 3, "skill_gap": 1, "possibility": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "'The gap between my taste and my ability feels unbridgeable right now.'",
+                    "weights": {"skill_gap": 2, "judgment": 2, "possibility": 0, "purpose": 0, "fatigue": 0},
+                },
+            ],
+        },
+        {
+            "id": "fq_skill_gap_judgment_2",
+            "text": "What describes your relationship to learning new creative techniques?",
+            "options": [
+                {
+                    "text": "Eager — I know what I need to learn and I'm actively seeking it.",
+                    "weights": {"skill_gap": 4, "judgment": 0, "possibility": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Avoidant — practising feels humiliating because I see how bad my attempts are.",
+                    "weights": {"judgment": 4, "skill_gap": 0, "possibility": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Frustrated — I understand the technique but can't make it work in practice.",
+                    "weights": {"skill_gap": 3, "judgment": 1, "possibility": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Paralysed — I don't want anyone to see me at the clumsy learning stage.",
+                    "weights": {"judgment": 3, "skill_gap": 1, "possibility": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Ambivalent — I'm not sure more skill would solve the underlying problem.",
+                    "weights": {"skill_gap": 1, "judgment": 1, "possibility": 0, "purpose": 2, "fatigue": 0},
+                },
+            ],
+        },
+    ],
+    frozenset({"possibility", "fatigue"}): [
+        {
+            "id": "fq_possibility_fatigue_1",
+            "text": "When you find yourself not working on your project, the most accurate description is:",
+            "options": [
+                {
+                    "text": "I'm down a rabbit hole of new ideas and never actually make anything.",
+                    "weights": {"possibility": 4, "fatigue": 0, "purpose": 0, "skill_gap": 0, "judgment": 0},
+                },
+                {
+                    "text": "I'm resting — too exhausted to create anything right now.",
+                    "weights": {"fatigue": 4, "possibility": 0, "purpose": 0, "skill_gap": 0, "judgment": 0},
+                },
+                {
+                    "text": "I'm researching and exploring — which feels productive but produces nothing.",
+                    "weights": {"possibility": 3, "fatigue": 1, "purpose": 0, "skill_gap": 0, "judgment": 0},
+                },
+                {
+                    "text": "I'm procrastinating because I have no energy and no idea what to do next.",
+                    "weights": {"fatigue": 2, "possibility": 2, "purpose": 0, "skill_gap": 0, "judgment": 0},
+                },
+                {
+                    "text": "I'm scrolling — too tired to make, not bored enough to stop.",
+                    "weights": {"fatigue": 4, "possibility": 0, "purpose": 0, "skill_gap": 0, "judgment": 0},
+                },
+            ],
+        },
+    ],
+}
