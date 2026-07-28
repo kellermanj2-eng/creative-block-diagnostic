@@ -22,10 +22,14 @@ POST /diagnose – response body
     "primary_name": "Judgment Block",
     "primary_description": "...",
     "exercise": "...",
-    "personalization": "...",   // empty string when watsonx disabled/no context
-    "secondary": "fatigue",     // null when no secondary qualifies
+    "personalization": "...",        // empty string when watsonx disabled/no context
+    "secondary": "fatigue",          // null when no secondary qualifies
     "secondary_name": "Creative Depletion",
-    "scores": { "possibility": 4, "purpose": 1, ... }
+    "scores": { "possibility": 4, "purpose": 1, ... },
+    "context_influence": {           // empty object when no context boost was applied
+        "fatigue": 0.32,
+        "judgment": 0.16
+    }
 }
 """
 
@@ -72,7 +76,7 @@ def diagnose_route():
         except (TypeError, ValueError):
             pass  # skip malformed values
 
-    result = diagnose(answers)
+    result = diagnose(answers, user_context=context)
 
     primary_intervention = INTERVENTIONS[result.primary]
     exercise_text = primary_intervention.exercise
@@ -100,6 +104,7 @@ def diagnose_route():
             "confidence": result.confidence,
             "confidence_score": result.confidence_score,
             "contributing_answers": result.contributing_answers,
+            "context_influence": result.context_influence,
         }
     )
 

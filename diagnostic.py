@@ -3,10 +3,16 @@ diagnostic.py – Pure scoring logic. No I/O, no network calls.
 
 Public API
 ----------
-diagnose(answers: dict[str, int]) -> DiagnosisResult
+diagnose(answers: dict[str, int], user_context: str = "") -> DiagnosisResult
 
-  answers  – maps question id (e.g. "q1") to the chosen option index (0-9).
-             Missing questions are simply skipped; partial submissions work.
+  answers      – maps question id (e.g. "q1") to the chosen option index (0-9).
+                 Missing questions are simply skipped; partial submissions work.
+  user_context – optional free-text description of the user's creative situation.
+                 When provided and watsonx is enabled/available, a small secondary
+                 signal (≤ 20% of one quiz question's weight) is added to the
+                 quiz-derived scores.  Entirely skipped when watsonx is
+                 disabled, unavailable, or the call fails — pure quiz scoring
+                 is always the fallback.
 
   returns  – DiagnosisResult with:
                primary              : str   – category with highest weighted score
@@ -19,6 +25,8 @@ diagnose(answers: dict[str, int]) -> DiagnosisResult
                contributing_answers : list[dict] – top 2-3 questions that most drove
                                                    the primary category, each with
                                                    {qid, question_text, weight}
+               context_influence    : dict  – per-category boost applied from watsonx
+                                             context analysis (empty when not applied)
 """
 
 from __future__ import annotations
@@ -38,6 +46,7 @@ class DiagnosisResult:
     confidence: str = "mixed signals"
     confidence_score: float = 1.0
     contributing_answers: list[dict] = field(default_factory=list)
+    context_influence: dict[str, float] = field(default_factory=dict)
 
 
 # Index questions by id for O(1) lookup.
@@ -45,6 +54,10 @@ _QUESTION_MAP = {q["id"]: q for q in QUESTIONS}
 
 # Threshold: secondary is reported only if it reaches this fraction of primary.
 _SECONDARY_THRESHOLD = 0.75  # i.e. within 25 % of primary
+
+# Context-boost cap: LLM scores are 0-10; normalised to at most 20% of one
+# quiz question's typical max weight (4 pts).  Max boost per category = 0.8 pts.
+_CONTEXT_MAX_BOOST = 0.8   # points added per category at LLM score = 10
 
 # Number of categories — used for entropy normalisation.
 _N_CATEGORIES = len(CATEGORIES)  # 5
@@ -61,7 +74,7 @@ _MODERATE_CONF_THRESHOLD = 0.70   # normalised entropy ≤ 0.70 → moderate con
 _TOP_N_CONTRIBUTORS = 3
 
 
-def diagnose(answers: dict[str, int]) -> DiagnosisResult:
+def diagnose(answers: dict[str, int], user_context: str = "") -> DiagnosisResult:
     """
     Score the submitted answers and return a DiagnosisResult.
 
@@ -71,6 +84,11 @@ def diagnose(answers: dict[str, int]) -> DiagnosisResult:
         Maps question id to chosen option index (0-based).
         Extra keys that don't match any question id are silently ignored.
         Option indices outside the valid range for a question are skipped.
+    user_context : str, optional
+        Free-text description of the user's creative situation.  When non-empty
+        and watsonx is available, a small secondary adjustment (capped at
+        _CONTEXT_MAX_BOOST pts per category) is applied on top of the quiz
+        scores before ranking.  Safe to omit; falls back to pure quiz scoring.
 
     Returns
     -------
@@ -97,7 +115,26 @@ def diagnose(answers: dict[str, int]) -> DiagnosisResult:
                 scores[category] += points
                 contributions.append((qid, question["text"], category, float(points)))
 
-    return _rank(scores, contributions)
+    # ── Optional context boost ────────────────────────────────────────────────
+    context_influence: dict[str, float] = {}
+    user_context = (user_context or "").strip()
+    if user_context:
+        try:
+            from llm_client import analyze_context_for_categories
+            raw_llm_scores = analyze_context_for_categories(user_context)
+        except Exception:  # noqa: BLE001
+            raw_llm_scores = None
+
+        if raw_llm_scores is not None:
+            for cat, llm_score in raw_llm_scores.items():
+                if cat in scores:
+                    # Normalise 0-10 LLM score to [0, _CONTEXT_MAX_BOOST] pts.
+                    boost = round((llm_score / 10.0) * _CONTEXT_MAX_BOOST, 4)
+                    if boost > 0:
+                        scores[cat] += boost
+                        context_influence[cat] = boost
+
+    return _rank(scores, contributions, context_influence)
 
 
 def _confidence_from_scores(scores: dict[str, float]) -> tuple[float, str]:
@@ -161,6 +198,7 @@ def _top_contributors(
 def _rank(
     scores: dict[str, float],
     contributions: list[tuple[str, str, str, float]],
+    context_influence: dict[str, float] | None = None,
 ) -> DiagnosisResult:
     """
     Given raw category scores and per-question contributions, determine
@@ -175,6 +213,9 @@ def _rank(
     - All-zero  : falls back to "possibility" as a safe default so callers
                   never receive an empty primary.
     """
+    if context_influence is None:
+        context_influence = {}
+
     # Sort descending by score, then ascending by name to break ties.
     ranked = sorted(scores.items(), key=lambda kv: (-kv[1], kv[0]))
 
@@ -189,6 +230,7 @@ def _rank(
             confidence="mixed signals",
             confidence_score=1.0,
             contributing_answers=[],
+            context_influence={},
         )
 
     secondary_name: Optional[str] = None
@@ -207,4 +249,5 @@ def _rank(
         confidence=confidence_label,
         confidence_score=confidence_score,
         contributing_answers=top_contributors,
+        context_influence=context_influence,
     )
