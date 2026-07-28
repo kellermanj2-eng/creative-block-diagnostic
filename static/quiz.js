@@ -24,6 +24,9 @@
   const resultSecondaryWrap = document.getElementById('result-secondary-wrap');
   const resultSecondaryName = document.getElementById('result-secondary-name');
   const retakeBtn    = document.getElementById('retake-btn');
+  const feedbackUp   = document.getElementById('feedback-up');
+  const feedbackDown = document.getElementById('feedback-down');
+  const feedbackThanks = document.getElementById('feedback-thanks');
 
   const errorBanner  = document.getElementById('error-banner');
   const errorMessage = document.getElementById('error-message');
@@ -260,11 +263,50 @@
       resultSecondaryWrap.hidden = true;
     }
 
+    // Reset feedback row for new result.
+    feedbackUp.disabled = false;
+    feedbackDown.disabled = false;
+    feedbackThanks.hidden = true;
+    feedbackUp.classList.remove('selected');
+    feedbackDown.classList.remove('selected');
+
     quizSection.hidden  = true;
     followupSection.hidden = true;
     resultSection.hidden = false;
+
+    // Store current primary for feedback submission.
+    resultSection.dataset.primary = data.primary || '';
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  // ── Feedback ───────────────────────────────────────────────────────────────
+  function submitFeedback(rating) {
+    var primary = resultSection.dataset.primary || '';
+    if (!primary) return;
+
+    feedbackUp.disabled = true;
+    feedbackDown.disabled = true;
+    feedbackThanks.hidden = false;
+
+    fetch('/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ primary: primary, rating: rating }),
+    }).catch(function () {
+      // Silently ignore network errors — feedback is best-effort.
+    });
+  }
+
+  feedbackUp.addEventListener('click', function () {
+    feedbackUp.classList.add('selected');
+    submitFeedback('up');
+  });
+
+  feedbackDown.addEventListener('click', function () {
+    feedbackDown.classList.add('selected');
+    submitFeedback('down');
+  });
 
   // ── Retake ─────────────────────────────────────────────────────────────────
   retakeBtn.addEventListener('click', function () {

@@ -5,6 +5,7 @@ Routes
 ------
 GET  /           Serve the quiz page (templates/index.html)
 POST /diagnose   Accept JSON body, return diagnosis JSON
+POST /feedback   Record thumbs-up/down for a completed diagnosis
 
 POST /diagnose – request body
 {
@@ -31,11 +32,25 @@ POST /diagnose – response body
         "judgment": 0.16
     }
 }
+
+POST /feedback – request body
+{
+    "primary": "judgment",           // diagnosed category
+    "rating": "up"                   // "up" or "down"
+}
+
+POST /feedback – response body
+{
+    "ok": true,
+    "totals": { "judgment": { "up": 3, "down": 1 }, ... }
+}
 """
 
 from __future__ import annotations
 
+import json
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -48,6 +63,24 @@ from interventions import INTERVENTIONS
 from llm_client import personalize_exercise
 
 app = Flask(__name__)
+
+# Feedback store: a single JSON file next to app.py.
+# Schema: { "judgment": { "up": 3, "down": 1 }, ... }
+_FEEDBACK_FILE = Path(__file__).parent / "feedback.json"
+
+
+def _load_feedback() -> dict:
+    try:
+        return json.loads(_FEEDBACK_FILE.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def _save_feedback(data: dict) -> None:
+    _FEEDBACK_FILE.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -149,6 +182,27 @@ def diagnose_route():
             "context_influence": result.context_influence,
         }
     )
+
+
+@app.post("/feedback")
+def feedback_route():
+    """Record a thumbs-up or thumbs-down for a diagnosis result."""
+    body = request.get_json(silent=True) or {}
+    primary = str(body.get("primary", "")).strip().lower()
+    rating = str(body.get("rating", "")).strip().lower()
+
+    from questions import CATEGORIES
+    if primary not in CATEGORIES:
+        return jsonify({"ok": False, "error": "invalid primary"}), 400
+    if rating not in ("up", "down"):
+        return jsonify({"ok": False, "error": "rating must be 'up' or 'down'"}), 400
+
+    data = _load_feedback()
+    cat_data = data.setdefault(primary, {"up": 0, "down": 0})
+    cat_data[rating] = cat_data.get(rating, 0) + 1
+    _save_feedback(data)
+
+    return jsonify({"ok": True, "totals": data})
 
 
 # ── Dev server ────────────────────────────────────────────────────────────────
