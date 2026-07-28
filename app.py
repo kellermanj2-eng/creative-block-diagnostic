@@ -49,6 +49,7 @@ POST /feedback – response body
 from __future__ import annotations
 
 import json
+import logging
 import os
 from pathlib import Path
 
@@ -62,7 +63,36 @@ from diagnostic import diagnose, get_followup_questions
 from interventions import INTERVENTIONS
 from llm_client import personalize_exercise
 
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+logger = logging.getLogger(__name__)
+
 app = Flask(__name__)
+
+# ── Startup configuration validation ──────────────────────────────────────────
+
+def _check_watsonx_config() -> None:
+    """Warn at startup if WATSONX_ENABLED=true but credentials are incomplete."""
+    enabled = os.getenv("WATSONX_ENABLED", "false").strip().lower() == "true"
+    if not enabled:
+        return
+    missing = [
+        name
+        for name, key in [
+            ("WATSONX_URL",        os.getenv("WATSONX_URL", "")),
+            ("WATSONX_API_KEY",    os.getenv("WATSONX_API_KEY", "")),
+            ("WATSONX_PROJECT_ID", os.getenv("WATSONX_PROJECT_ID", "")),
+        ]
+        if not key.strip()
+    ]
+    if missing:
+        logger.warning(
+            "WATSONX_ENABLED=true but %s %s missing — running in offline-fallback mode. "
+            "AI personalisation will use a template instead of the Granite model.",
+            ", ".join(missing),
+            "is" if len(missing) == 1 else "are",
+        )
+
+_check_watsonx_config()
 
 # Feedback store: a single JSON file next to app.py.
 # Schema: { "judgment": { "up": 3, "down": 1 }, ... }

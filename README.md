@@ -6,7 +6,56 @@
 
 A small Flask web app that helps you figure out *why* you're creatively stuck and gives you one specific exercise to get unstuck.
 
-Answer five questions, receive a scored diagnosis across five block categories, and get a targeted exercise to break through — with AI-powered personalisation via IBM watsonx Granite, verified working end-to-end (and gracefully offline when credentials aren't provided).
+Answer ten questions, receive a scored diagnosis across five block categories, and get a targeted exercise to break through — with AI-powered personalisation via IBM watsonx Granite, verified working end-to-end (and gracefully offline when credentials aren't provided).
+
+---
+
+## Quick Start for Testers
+
+**No IBM Cloud account required.** The app runs fully offline out of the box.
+
+### Option A — Docker (fastest, zero Python/pip setup)
+
+```bash
+git clone https://github.com/kellermanj2-eng/creative-block-diagnostic.git
+cd creative-block-diagnostic
+docker build -t creative-block-diagnostic .
+docker run -p 5000:5000 creative-block-diagnostic
+```
+
+Open [http://localhost:5000](http://localhost:5000). Done.
+
+> To enable watsonx AI personalisation, pass credentials at run time:
+> ```bash
+> docker run -p 5000:5000 \
+>   -e WATSONX_ENABLED=true \
+>   -e WATSONX_URL=https://us-south.ml.cloud.ibm.com \
+>   -e WATSONX_API_KEY=your_key \
+>   -e WATSONX_PROJECT_ID=your_project_id \
+>   creative-block-diagnostic
+> ```
+
+### Option B — Setup script (no Docker)
+
+**Mac / Linux**
+```bash
+git clone https://github.com/kellermanj2-eng/creative-block-diagnostic.git
+cd creative-block-diagnostic
+bash setup.sh
+source .venv/bin/activate
+python app.py
+```
+
+**Windows**
+```bat
+git clone https://github.com/kellermanj2-eng/creative-block-diagnostic.git
+cd creative-block-diagnostic
+setup.bat
+.venv\Scripts\activate
+python app.py
+```
+
+The setup script creates a virtual environment, installs all dependencies, and copies `.env.example` to `.env`.
 
 ---
 
@@ -55,7 +104,7 @@ This project was scaffolded and built end-to-end with **[IBM Bob](https://www.ib
 
 ---
 
-## Quick start
+## Manual setup (step by step)
 
 ```bash
 # 1. Clone and create a virtual environment
