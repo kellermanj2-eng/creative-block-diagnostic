@@ -1,16 +1,131 @@
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 ![Built with IBM watsonx](https://img.shields.io/badge/built%20with-IBM%20watsonx-054ADA?logo=ibm&logoColor=white)
+![Built with IBM Bob](https://img.shields.io/badge/built%20with-IBM%20Bob-7c5cd8?logo=ibm&logoColor=white)
 
 # Creative Block Diagnostic
 
-A small Flask web app that helps you figure out *why* you're creatively stuck and gives you one specific exercise to get unstuck.
+A Flask web app that diagnoses *why* you're creatively stuck and gives you one specific, actionable exercise to get unstuck.
 
-Answer ten questions, receive a scored diagnosis across five block categories, and get a targeted exercise to break through — with AI-powered personalisation via IBM watsonx Granite, verified working end-to-end (and gracefully offline when credentials aren't provided).
+Answer ten questions, receive a scored diagnosis across five creative-block categories, and get a targeted exercise to break through — with optional AI-powered personalisation via IBM watsonx Granite.
 
 ---
 
-## Quick Start for Testers
+## Problem Statement
+
+Creative blocks are not uniform. "I can't start" looks the same on the surface whether you're paralysed by too many options, terrified of judgement, running on empty, or simply unable to close the gap between your vision and your skills. Generic advice — *"just start", "lower your standards", "take a break"* — fails because it doesn't distinguish between these fundamentally different problems.
+
+There is no lightweight, free, self-serve tool that:
+- Helps a person identify *which kind* of block they are experiencing
+- Gives them a concrete, category-specific exercise rather than platitudes
+- Works instantly without an account, subscription, or therapist
+
+**Creative Block Diagnostic** is that tool.
+
+---
+
+## Solution Description
+
+The app presents ten weighted multiple-choice questions about the user's creative situation. Each answer option carries per-category weights across five block types. The scoring engine sums the weights, ranks the categories by score, and produces:
+
+- A **primary diagnosis** — the dominant block type
+- A **secondary diagnosis** — surfaced when a second category scores within 25 % of the primary (common in real-world mixed states)
+- A **confidence label** — derived from normalised Shannon entropy across all five category scores, so users know whether the result is clear-cut or ambiguous
+- A **concrete exercise** — one specific, practical technique for the diagnosed block; no vague advice, no toxic positivity
+- An **AI personalisation note** (optional) — if the user describes their specific situation, `ibm/granite-3-3-8b-instruct` on IBM watsonx generates 2–3 sentences connecting their context to the exercise
+
+The entire diagnosis runs offline with no credentials required. The watsonx layer is a graceful enhancement, not a dependency.
+
+---
+
+## AI Approach and Architecture
+
+### Scoring engine (`diagnostic.py`)
+
+The core diagnostic is fully deterministic and requires no AI:
+
+1. **Weighted answer accumulation** — each selected answer option contributes floating-point weights to one or more of the five categories
+2. **Entropy-based confidence** — normalised Shannon entropy over the category score distribution determines whether the result is `high confidence`, `moderate confidence`, or `mixed signals`
+3. **Secondary threshold** — a second diagnosis is only reported when it reaches ≥ 75 % of the primary score
+4. **Contributing answers** — the top 2–3 questions that most drove the primary result are surfaced for transparency
+5. **Follow-up questions** — when confidence is `mixed signals`, a pair of targeted follow-up questions for the top-two categories can be served to refine the diagnosis
+
+### watsonx AI layer (`llm_client.py`)
+
+Two AI capabilities are layered on top of the deterministic engine, both **optional and fail-safe**:
+
+| Capability | Function | Model |
+|---|---|---|
+| **Exercise personalisation** | Given the user's free-text description of their situation, generates 2–3 sentences making the canonical exercise feel specifically written for them | `ibm/granite-3-3-8b-instruct` |
+| **Context scoring** | Sends the user's free-text to watsonx for a conservative 0–10 score per category; the result is applied as a small secondary signal (≤ 0.8 pts per category, capped to ~20 % of one quiz question's weight) on top of the quiz scores | `ibm/granite-3-3-8b-instruct` |
+
+Both functions return gracefully (empty string / `None`) on any failure — network error, missing credentials, bad JSON response, SDK exception. The app never raises and never blocks on an AI call.
+
+### Architecture overview
+
+```
+Browser (single-page HTML/CSS/JS)
+        │  GET /          – serves quiz UI
+        │  POST /diagnose – JSON in, JSON out
+        ▼
+    app.py  (Flask)
+        │
+        ├─ diagnostic.py       Pure Python scoring engine
+        │       ├─ questions.py        Question bank + follow-up questions
+        │       ├─ interventions.py    Block descriptions + exercises
+        │       └─ llm_client.py ──── IBM watsonx Granite (optional)
+        │
+        └─ static/             CSS
+```
+
+### Selected challenge theme
+
+**Productivity & Wellbeing** — the tool addresses creative stagnation, a form of cognitive/emotional friction that directly affects personal productivity and creative output. The diagnostic-first approach (identify the root cause, then act) is meaningfully different from to-do list or time-management tools; it targets the *why* behind inaction, not just the *what*.
+
+---
+
+## How IBM Bob Was Used
+
+This project was designed, scaffolded, and built end-to-end with **[IBM Bob](https://www.ibm.com/products/bob)**, an AI software engineer. Every file in the repository was either written by Bob or reviewed and refined through direct conversation with Bob. Specifically:
+
+| What Bob did | Files |
+|---|---|
+| Scaffolded the Flask application — `GET /` and `POST /diagnose` routes, request parsing, response shaping, error handling | [`app.py`](app.py) |
+| Designed and implemented the scoring engine — weighted accumulation, Shannon entropy confidence, secondary threshold, contributing-answer tracking, follow-up question logic | [`diagnostic.py`](diagnostic.py) |
+| Authored the ten-question bank — wrote every question and its weighted answer options, calibrated so each block category is reliably identifiable from a full sweep | [`questions.py`](questions.py) |
+| Defined the intervention library — wrote all five block descriptions and concrete exercises, with an explicit no-toxic-positivity constraint on the fatigue entry | [`interventions.py`](interventions.py) |
+| Built the watsonx integration — Granite prompt templates, credential handling, offline fallback logic, graceful error recovery so the app never raises on LLM failure | [`llm_client.py`](llm_client.py) |
+| Built the quiz UI — single-page HTML/CSS/JS front end, question renderer, fetch-based form submission, results display | [`templates/index.html`](templates/index.html) |
+| Wrote the test suites — integration runner with unit tests (scoring, entropy, interventions, offline LLM path) and Flask integration tests; pytest-discoverable test file | [`_run_tests.py`](_run_tests.py), [`test_diagnosis.py`](test_diagnosis.py) |
+| Authored the 25-persona evaluation suite — synthetic profiles covering clear-cut, mixed, and edge-case inputs to verify scoring consistency | [`eval_personas.py`](eval_personas.py) |
+| Set up Docker, setup scripts, `.env.example`, and CI-ready project structure | [`Dockerfile`](Dockerfile), [`setup.sh`](setup.sh), [`setup.bat`](setup.bat), [`.env.example`](.env.example) |
+| Maintained project documentation, git hygiene (commit messages, file renames, screenshot updates) | This README, [`LICENSE`](LICENSE) |
+
+Bob was used interactively — decisions about architecture, framing, and content were made collaboratively. The watsonx prompt engineering, scoring thresholds, and block taxonomy were iterated through conversation before being committed.
+
+---
+
+## Block Categories
+
+| Key | Name | What it is |
+|---|---|---|
+| `possibility` | Possibility Paralysis | Too many options; nothing feels justified |
+| `purpose` | Purpose Void | The work feels hollow before it's started or finished |
+| `skill_gap` | Execution Gap | Clear vision, but the skills aren't there yet |
+| `fatigue` | Creative Depletion | Genuine low energy — pushing harder makes it worse |
+| `judgment` | Judgment Block | Editing before creating; the inner critic blocks output |
+
+---
+
+## Screenshots
+
+| Quiz | Diagnosis |
+|---|---|
+| ![Quiz screenshot](screenshots/quiz_view.png) | ![Result screenshot](screenshots/quiz_results.png) |
+
+---
+
+## Quick Start
 
 **No IBM Cloud account required.** The app runs fully offline out of the box.
 
@@ -55,73 +170,15 @@ setup.bat
 python app.py
 ```
 
-The setup script creates a virtual environment, installs all dependencies, and copies `.env.example` to `.env`.
-
----
-
-## Built with IBM Bob
-
-This project was scaffolded and built end-to-end with **[IBM Bob](https://www.ibm.com/products/bob)**, an AI software engineer. Specifically, Bob:
-
-- **Scaffolded the Flask application** — created [`app.py`](app.py) with the `GET /` and `POST /diagnose` routes, request parsing, and response shaping
-- **Wrote the scoring engine** — designed and implemented [`diagnostic.py`](diagnostic.py), including the weighted category scoring, primary/secondary ranking logic, tie-breaking, and the all-zero fallback
-- **Authored the question bank** — wrote all five quiz questions and their weighted answer options in [`questions.py`](questions.py), calibrated so each block category is reliably identifiable from a five-question sweep
-- **Defined the intervention library** — wrote all five block descriptions and concrete exercises in [`interventions.py`](interventions.py), including the no-toxic-positivity framing for the fatigue entry
-- **Wired up the watsonx integration** — built [`llm_client.py`](llm_client.py) with the Granite prompt templates, credential handling, offline fallback logic, and graceful error recovery so the app never raises on LLM failure
-- **Built the quiz UI** — created the single-page HTML/CSS/JS front end in [`templates/index.html`](templates/index.html), including the question renderer, fetch-based form submission, and results display
-- **Wrote the test suite** — authored [`_run_tests.py`](_run_tests.py) covering unit tests for scoring, interventions completeness, and the offline LLM path, plus Flask integration tests for all route behaviours
-- **Added project documentation** — wrote this README and the MIT [LICENSE](LICENSE)
-
----
-
-## Block categories
-
-| Key | Name | What it is |
-|---|---|---|
-| `possibility` | Possibility Paralysis | Too many options; nothing feels justified |
-| `purpose` | Purpose Void | The work feels hollow before it's finished |
-| `skill_gap` | Execution Gap | Clear vision, but the skills aren't there yet |
-| `fatigue` | Creative Depletion | Genuine low energy — pushing harder makes it worse |
-| `judgment` | Judgment Block | Editing before creating; the inner critic blocks output |
-
----
-
-## Features
-
-- **Scored quiz** — ten weighted questions map answers to block categories
-- **Primary + secondary diagnosis** — secondary is surfaced if it scores within 25 % of primary
-- **Concrete exercises** — one specific, actionable exercise per block type (no vague advice)
-- **AI personalisation via IBM watsonx Granite** — if you describe your specific situation, `ibm/granite-3-3-8b-instruct` generates a 1–2 sentence note connecting your context to the exercise. This integration has been verified end-to-end with real credentials.
-- **Offline-first** — runs completely without credentials; watsonx personalisation gracefully falls back to a template-based note when disabled or unavailable
-
----
-
-## Screenshots
-
-| Quiz | Diagnosis |
-|---|---|
-| ![Quiz screenshot](screenshots/quiz_view.png) | ![Result screenshot](screenshots/quiz_results.png) |
-
----
-
-## Manual setup (step by step)
+### Option C — Manual setup
 
 ```bash
-# 1. Clone and create a virtual environment
 git clone https://github.com/kellermanj2-eng/creative-block-diagnostic.git
 cd creative-block-diagnostic
 python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
-
-# 2. Install dependencies
 pip install -r requirements.txt
-
-# 3. Configure environment (optional — needed only for AI personalisation)
-cp .env.example .env
-# Edit .env: set WATSONX_ENABLED=true and fill in your IBM Cloud credentials
-# The app runs fully offline without this step
-
-# 4. Run the app
+cp .env.example .env           # optional — only needed for watsonx
 python app.py
 ```
 
@@ -129,9 +186,24 @@ Open [http://localhost:5000](http://localhost:5000) in your browser.
 
 ---
 
-## Environment variables
+## Running the Tests
 
-Copy `.env.example` to `.env`. All variables are optional — the app runs fully offline without any of them. The watsonx integration has been tested end-to-end and works with `ibm/granite-3-3-8b-instruct` on IBM Cloud.
+```bash
+# Pytest (5 unit tests — runs in <1 s, no credentials needed)
+pytest test_diagnosis.py -v
+
+# Full integration suite (scoring, entropy, Flask routes, offline LLM path)
+python _run_tests.py
+
+# 25-persona evaluation suite
+python eval_personas.py
+```
+
+---
+
+## Environment Variables
+
+Copy `.env.example` to `.env`. All variables are optional — the app runs fully offline without any of them.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -182,16 +254,6 @@ Accepts a JSON body and returns the diagnosis.
 
 `personalization` is an empty string when watsonx is disabled or no context was provided.  
 `secondary` and `secondary_name` are `null` when no second block scores within 25 % of the primary.
-
----
-
-## Running the tests
-
-```bash
-python _run_tests.py
-```
-
-Runs unit tests (scoring logic, interventions completeness, offline LLM path) and Flask integration tests.
 
 ---
 
