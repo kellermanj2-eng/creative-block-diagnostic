@@ -100,7 +100,7 @@ This project was scaffolded and built end-to-end with **[IBM Bob](https://www.ib
 
 | Quiz | Diagnosis |
 |---|---|
-| ![Quiz screenshot](screenshots/quiz.png) | ![Result screenshot](screenshots/result.png) |
+| ![Quiz screenshot](screenshots/quiz_view.png) | ![Result screenshot](screenshots/quiz_results.png) |
 
 ---
 
