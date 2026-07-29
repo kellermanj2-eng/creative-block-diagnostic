@@ -1,5 +1,5 @@
 """
-test_personas.py – Synthetic persona evaluation suite.
+eval_personas.py – Synthetic persona evaluation suite.
 
 Runs 25 persona profiles through the full diagnose() pipeline to verify
 that the scoring logic produces sensible, consistent results across a
@@ -13,8 +13,8 @@ Profiles
 
 Usage
 -----
-    python test_personas.py            # full output
-    python test_personas.py --quiet    # only failures + final summary
+    python eval_personas.py            # full output
+    python eval_personas.py --quiet    # only failures + final summary
 
 Exit code: 0 if all assertions pass, 1 otherwise.
 """
