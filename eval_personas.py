@@ -301,6 +301,94 @@ PERSONAS: list[Persona] = [
         description="Half possibility, half judgment — common ambiguous case.",
     ),
 
+    # ── Clear-cut comparison ──────────────────────────────────────────────────
+    Persona(
+        name="Comparison – full sweep",
+        answers=build_sweep("comparison"),
+        expected_primary="comparison",
+        expected_confidence_bucket="high",
+        description="All 10 answers point to comparison block.",
+    ),
+    Persona(
+        name="Comparison – 8/10 strong",
+        answers={**build_sweep("comparison"),
+                 **{qmod.QUESTIONS[8]["id"]: best_option(qmod.QUESTIONS[8], "judgment"),
+                    qmod.QUESTIONS[9]["id"]: best_option(qmod.QUESTIONS[9], "judgment")}},
+        expected_primary="comparison",
+        expected_confidence_bucket=None,
+        description="8 comparison answers, 2 judgment noise.",
+    ),
+    Persona(
+        name="Comparison – doomscroll spiral",
+        answers={
+            "q1": 5,   # comparison:4, judgment:1
+            "q2": 5,   # comparison:4, judgment:1
+            "q5": 5,   # comparison:4, purpose:1
+            "q6": 5,   # comparison:4, judgment:1
+            "q9": 5,   # comparison:4, fatigue:1
+        },
+        expected_primary="comparison",
+        description="Real-world pattern: looks at others' work and loses will to start.",
+    ),
+
+    # ── Clear-cut imposter_syndrome ───────────────────────────────────────────
+    Persona(
+        name="Imposter – full sweep",
+        answers=build_sweep("imposter_syndrome"),
+        expected_primary="imposter_syndrome",
+        expected_confidence_bucket="high",
+        description="All 10 answers point to imposter_syndrome block.",
+    ),
+    Persona(
+        name="Imposter – 8/10 strong",
+        answers={**build_sweep("imposter_syndrome"),
+                 **{qmod.QUESTIONS[0]["id"]: best_option(qmod.QUESTIONS[0], "purpose"),
+                    qmod.QUESTIONS[1]["id"]: best_option(qmod.QUESTIONS[1], "purpose")}},
+        expected_primary="imposter_syndrome",
+        description="8 imposter answers, 2 purpose noise.",
+    ),
+    Persona(
+        name="Imposter – who am I to do this",
+        answers={
+            "q1": 6,   # imposter_syndrome:4, purpose:1
+            "q3": 6,   # imposter_syndrome:4, judgment:1
+            "q4": 6,   # imposter_syndrome:4
+            "q7": 6,   # imposter_syndrome:4, purpose:1
+            "q9": 6,   # imposter_syndrome:4, purpose:1
+        },
+        expected_primary="imposter_syndrome",
+        description="Classic imposter: functional ability, feeling of fraudulence.",
+    ),
+
+    # ── Clear-cut perfectionism ───────────────────────────────────────────────
+    Persona(
+        name="Perfectionism – full sweep",
+        answers=build_sweep("perfectionism"),
+        expected_primary="perfectionism",
+        expected_confidence_bucket="high",
+        description="All 10 answers point to perfectionism block.",
+    ),
+    Persona(
+        name="Perfectionism – 8/10 strong",
+        answers={**build_sweep("perfectionism"),
+                 **{qmod.QUESTIONS[4]["id"]: best_option(qmod.QUESTIONS[4], "possibility"),
+                    qmod.QUESTIONS[5]["id"]: best_option(qmod.QUESTIONS[5], "possibility")}},
+        expected_primary="perfectionism",
+        description="8 perfectionism answers, 2 possibility noise.",
+    ),
+    Persona(
+        name="Perfectionism – endless refiner",
+        answers={
+            "q1": 7,   # perfectionism:4, possibility:1
+            "q2": 7,   # perfectionism:4, possibility:1
+            "q5": 7,   # perfectionism:4, skill_gap:1
+            "q7": 7,   # perfectionism:4, possibility:1
+            "q9": 7,   # perfectionism:4, skill_gap:1
+        },
+        expected_primary="perfectionism",
+        description="Plans endlessly, refines in place, never ships.",
+    ),
+
     # ── Edge cases ────────────────────────────────────────────────────────────
     Persona(
         name="Edge – partial submission (3 questions only)",

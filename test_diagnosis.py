@@ -56,8 +56,8 @@ def test_high_confidence_single_category():
 
 
 def test_mixed_signals_even_split():
-    cs, label = _confidence_from_scores(
-        {"possibility": 4, "purpose": 4, "skill_gap": 4, "fatigue": 4, "judgment": 4}
-    )
+    # Even split across all 8 categories → maximum entropy → mixed signals
+    from questions import CATEGORIES
+    cs, label = _confidence_from_scores({cat: 4 for cat in CATEGORIES})
     assert abs(cs - 1.0) < 1e-6
     assert label == "mixed signals"

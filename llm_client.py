@@ -85,7 +85,8 @@ the exercise was written for them, not for a generic creative person.\
 
 # ---- context-category scoring -----------------------------------------------
 
-_CATEGORIES = ("possibility", "purpose", "skill_gap", "fatigue", "judgment")
+_CATEGORIES = ("possibility", "purpose", "skill_gap", "fatigue", "judgment",
+               "comparison", "imposter_syndrome", "perfectionism")
 
 _CONTEXT_SYSTEM_PROMPT = (
     "You are a conservative scoring assistant for a creative-block diagnostic tool. "
@@ -98,7 +99,8 @@ _CONTEXT_SYSTEM_PROMPT = (
     "(2) Only raise a score above 5 if the user explicitly describes that pattern. "
     "(3) Most scores should be 0-3 unless the user's words clearly match a category. "
     "(4) Return ONLY a JSON object with exactly these keys: "
-    "possibility, purpose, skill_gap, fatigue, judgment. "
+    "possibility, purpose, skill_gap, fatigue, judgment, "
+    "comparison, imposter_syndrome, perfectionism. "
     "No explanation, no preamble, no markdown code fences — raw JSON only."
 )
 
@@ -107,7 +109,8 @@ User's description of their creative situation (their own words):
 {user_context}
 
 Return a JSON object scoring 0-10 for each category: \
-possibility, purpose, skill_gap, fatigue, judgment.\
+possibility, purpose, skill_gap, fatigue, judgment, \
+comparison, imposter_syndrome, perfectionism.\
 """
 
 # ── Offline fallback ──────────────────────────────────────────────────────────

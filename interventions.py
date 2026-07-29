@@ -119,4 +119,69 @@ INTERVENTIONS: dict[str, Intervention] = {
             "a target it can't hurt."
         ),
     ),
+    "comparison": Intervention(
+        name="Comparison Trap",
+        description=(
+            "The block isn't your work — it's the gap between your work and the best work "
+            "you've been consuming. You've calibrated your taste against polished, finished "
+            "output from people who've been doing this longer, and your drafts look bad by "
+            "that standard. The more you consume, the worse your own output looks in "
+            "comparison. The creative energy drains not from internal judgement but from "
+            "an external reference point that was never a fair comparison."
+        ),
+        exercise=(
+            "Input Fast + Audience of One: For the next 48 hours, stop consuming work in "
+            "your medium entirely — no feeds, no portfolios, no 'inspiration.' Then identify "
+            "one specific person — not a demographic, not 'people who like this kind of thing' "
+            "— who would benefit from your version of this work. Write one sentence about what "
+            "only you can bring to this project that the work you've been comparing yourself "
+            "to doesn't have: a specific experience, a specific perspective, a specific "
+            "constraint. Work only toward that person and that sentence for your next session. "
+            "Don't look at anyone else's work until the session ends."
+        ),
+    ),
+    "imposter_syndrome": Intervention(
+        name="Imposter Syndrome",
+        description=(
+            "The block isn't a skill gap — you have functional ability. The block is the "
+            "persistent feeling that you're fraudulently occupying a space you haven't earned, "
+            "that your past successes were luck, and that continuing to make work risks "
+            "exposing you. Unlike Judgment Block, which fears the work being bad, Imposter "
+            "Syndrome fears the person being illegitimate. The distinction matters: improving "
+            "your skills doesn't resolve it, because legitimacy isn't the real question."
+        ),
+        exercise=(
+            "Evidence Inventory: Get a blank page. In ten minutes, list every piece of "
+            "evidence that you have done this before — finished projects, things you've "
+            "shipped, moments where your contribution mattered, skills you've demonstrably "
+            "developed. Don't filter for significance. Then write one sentence that separates "
+            "credential from contribution: 'I don't need permission to make this because...' "
+            "and complete it with something that is true about your experience or perspective, "
+            "not your title or qualifications. Keep that sentence somewhere visible. The goal "
+            "isn't to feel confident — it's to notice that the evidence for legitimacy already "
+            "exists and you've been discounting it."
+        ),
+    ),
+    "perfectionism": Intervention(
+        name="Perfectionism Block",
+        description=(
+            "The block is an internal standard that moves. You can execute the work — "
+            "the problem is that your bar for 'good enough to proceed' or 'good enough to "
+            "finish' keeps rising as you approach it. Unlike Judgment Block, the fear isn't "
+            "primarily about how others will receive the work; it's about not being able to "
+            "tolerate output that falls short of an ideal. The unfinished or un-started state "
+            "feels safer because it protects the ideal from being tested."
+        ),
+        exercise=(
+            "Time-Box + Pre-Set Criteria: Before your next session, write down exactly three "
+            "criteria that would make this piece of work 'done' — specific, observable things, "
+            "not feelings. Set a timer for 45 minutes. Work only toward those three criteria. "
+            "When the timer ends, evaluate only against those three criteria — not against how "
+            "the work compares to your ideal or to other work. If all three are met, the work "
+            "is done for this session. If not, identify which one remains and set a new 20-minute "
+            "block for that specific criterion only. The goal is to replace 'good enough' — "
+            "which is a feeling — with a concrete, pre-committed definition that can actually "
+            "be reached."
+        ),
+    ),
 }

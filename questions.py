@@ -1,9 +1,10 @@
 """
 questions.py – Quiz questions and their weighted answer options.
 
-Each question has 5 answer options (index 0–4).
+Each question has 5 answer options (index 0–7).
 Each option carries a `weights` dict mapping category keys to point values.
 Categories: possibility | purpose | skill_gap | fatigue | judgment
+           | comparison | imposter_syndrome | perfectionism
 
 Weights are non-negative integers; an option can weight multiple categories
 (blocks overlap), but one category usually dominates.
@@ -29,6 +30,9 @@ CATEGORIES: tuple[str, ...] = (
     "skill_gap",
     "fatigue",
     "judgment",
+    "comparison",
+    "imposter_syndrome",
+    "perfectionism",
 )
 
 QUESTIONS: list[Question] = [
@@ -56,6 +60,18 @@ QUESTIONS: list[Question] = [
                 "text": "I start, then delete everything because it's not good enough yet.",
                 "weights": {"judgment": 4, "possibility": 1},
             },
+            {
+                "text": "I open it, glance at what others are making online, and close the tab feeling behind.",
+                "weights": {"comparison": 4, "judgment": 1},
+            },
+            {
+                "text": "I start, but a quiet voice asks who I think I am to be making this.",
+                "weights": {"imposter_syndrome": 4, "purpose": 1},
+            },
+            {
+                "text": "I plan extensively — outlining, researching — but never actually begin.",
+                "weights": {"perfectionism": 4, "possibility": 1},
+            },
         ],
     },
     {
@@ -81,6 +97,18 @@ QUESTIONS: list[Question] = [
             {
                 "text": "I have ideas but they all seem embarrassing or not original enough.",
                 "weights": {"judgment": 4, "purpose": 1},
+            },
+            {
+                "text": "I have ideas but they all feel derivative — someone else has already done it better.",
+                "weights": {"comparison": 4, "judgment": 1},
+            },
+            {
+                "text": "I have ideas but I'm not qualified to execute them — someone more experienced should.",
+                "weights": {"imposter_syndrome": 4, "skill_gap": 1},
+            },
+            {
+                "text": "I have one idea but I'm not ready to start — it needs to be fully formed first.",
+                "weights": {"perfectionism": 4, "possibility": 1},
             },
         ],
     },
@@ -108,6 +136,18 @@ QUESTIONS: list[Question] = [
                 "text": "Anxiety — I worry that once it's done, people will judge it (and me).",
                 "weights": {"judgment": 4, "purpose": 1},
             },
+            {
+                "text": "Deflation — I can already picture better versions of it that others have made.",
+                "weights": {"comparison": 4, "judgment": 1},
+            },
+            {
+                "text": "Dread — finishing means being seen, and being seen means being found out.",
+                "weights": {"imposter_syndrome": 4, "judgment": 1},
+            },
+            {
+                "text": "Dissatisfaction in advance — I know it won't meet the standard I'm aiming for.",
+                "weights": {"perfectionism": 4, "skill_gap": 1},
+            },
         ],
     },
     {
@@ -133,6 +173,18 @@ QUESTIONS: list[Question] = [
             {
                 "text": "'Even if you finish it, everyone will see how mediocre it is.'",
                 "weights": {"judgment": 4},
+            },
+            {
+                "text": "'Why bother — someone with real talent has already made something better.'",
+                "weights": {"comparison": 4, "purpose": 1},
+            },
+            {
+                "text": "'You're not the kind of person who gets to do this — you don't have the credentials.'",
+                "weights": {"imposter_syndrome": 4},
+            },
+            {
+                "text": "'It's not ready yet. Keep refining until it's right before you start.'",
+                "weights": {"perfectionism": 4, "possibility": 1},
             },
         ],
     },
@@ -160,6 +212,18 @@ QUESTIONS: list[Question] = [
                 "text": "Stop-start. I produce things privately but hesitate to show or commit to them.",
                 "weights": {"judgment": 4, "possibility": 1},
             },
+            {
+                "text": "Absent. Seeing everyone else's polished output has made starting feel pointless.",
+                "weights": {"comparison": 4, "purpose": 1},
+            },
+            {
+                "text": "Sporadic and secretive — I work in bursts but share nothing; I don't feel legitimate.",
+                "weights": {"imposter_syndrome": 4, "judgment": 1},
+            },
+            {
+                "text": "Very slow — I redo and refine the same small section rather than moving forward.",
+                "weights": {"perfectionism": 4, "skill_gap": 1},
+            },
         ],
     },
     {
@@ -185,6 +249,18 @@ QUESTIONS: list[Question] = [
             {
                 "text": "Defensive or deflated — I compare and always come up short.",
                 "weights": {"judgment": 4, "purpose": 1},
+            },
+            {
+                "text": "Paralysed. Their finished, polished work makes mine feel pointless before it exists.",
+                "weights": {"comparison": 4, "judgment": 1},
+            },
+            {
+                "text": "Like a fraud. They clearly belong here; I'm not sure I do.",
+                "weights": {"imposter_syndrome": 4, "purpose": 1},
+            },
+            {
+                "text": "Critical — I notice every flaw in their work and worry mine will have the same ones.",
+                "weights": {"perfectionism": 4, "judgment": 1},
             },
         ],
     },
@@ -212,6 +288,18 @@ QUESTIONS: list[Question] = [
                 "text": "I'd tinker but not commit anything. It wouldn't feel ready to be seen — even by me.",
                 "weights": {"judgment": 4, "possibility": 1},
             },
+            {
+                "text": "I'd start something, then spiral into looking at what everyone else is doing instead.",
+                "weights": {"comparison": 4, "fatigue": 1},
+            },
+            {
+                "text": "I'd probably find an excuse not to — I don't feel like I've earned the right to make freely.",
+                "weights": {"imposter_syndrome": 4, "purpose": 1},
+            },
+            {
+                "text": "I'd spend most of it planning and preparing — I need conditions to be right before I begin.",
+                "weights": {"perfectionism": 4, "possibility": 1},
+            },
         ],
     },
     {
@@ -237,6 +325,18 @@ QUESTIONS: list[Question] = [
             {
                 "text": "I'm already embarrassed by it. I notice everything that's wrong with it.",
                 "weights": {"judgment": 4},
+            },
+            {
+                "text": "Hollow. It exists, but better versions of it exist, made by better people.",
+                "weights": {"comparison": 4, "purpose": 1},
+            },
+            {
+                "text": "Suspicious of myself — like I got lucky and won't be able to repeat it.",
+                "weights": {"imposter_syndrome": 4, "judgment": 1},
+            },
+            {
+                "text": "Already focused on what I should have done differently — I see every flaw first.",
+                "weights": {"perfectionism": 4, "judgment": 1},
             },
         ],
     },
@@ -264,6 +364,18 @@ QUESTIONS: list[Question] = [
                 "text": "Rereading or reviewing what I've done and deciding it's not good enough.",
                 "weights": {"judgment": 4, "possibility": 1},
             },
+            {
+                "text": "Opening a browser and looking at what others are making — and losing momentum entirely.",
+                "weights": {"comparison": 4, "fatigue": 1},
+            },
+            {
+                "text": "A thought like 'who am I to be doing this?' that drains the energy from the session.",
+                "weights": {"imposter_syndrome": 4, "purpose": 1},
+            },
+            {
+                "text": "Getting stuck trying to perfect an earlier section before I can move on.",
+                "weights": {"perfectionism": 4, "skill_gap": 1},
+            },
         ],
     },
     {
@@ -289,6 +401,18 @@ QUESTIONS: list[Question] = [
             {
                 "text": "Secretly relieved — it can't be judged if it's never done.",
                 "weights": {"judgment": 4, "purpose": 1},
+            },
+            {
+                "text": "Like a reason to stop — why finish something that won't measure up to what's already out there?",
+                "weights": {"comparison": 4, "purpose": 1},
+            },
+            {
+                "text": "Quietly relieved — if it's unfinished, no one can confirm I wasn't capable of it.",
+                "weights": {"imposter_syndrome": 4, "judgment": 1},
+            },
+            {
+                "text": "Like a failure — but also like I can keep improving it indefinitely without the risk of it being judged as final.",
+                "weights": {"perfectionism": 4, "judgment": 1},
             },
         ],
     },
@@ -574,6 +698,269 @@ FOLLOWUP_QUESTIONS: dict[frozenset, list[Question]] = {
                 {
                     "text": "I'm scrolling — too tired to make, not bored enough to stop.",
                     "weights": {"fatigue": 4, "possibility": 0, "purpose": 0, "skill_gap": 0, "judgment": 0},
+                },
+            ],
+        },
+    ],
+
+    # ── New category pairs ────────────────────────────────────────────────────
+
+    frozenset({"comparison", "judgment"}): [
+        {
+            "id": "fq_comparison_judgment_1",
+            "text": "When you hesitate to share or commit to your work, the main thought is:",
+            "options": [
+                {
+                    "text": "Someone else has already done this better — what's the point of adding mine?",
+                    "weights": {"comparison": 4, "judgment": 0, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "People will look at this and see how mediocre I am.",
+                    "weights": {"judgment": 4, "comparison": 0, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "My work can't compete with what's already out there.",
+                    "weights": {"comparison": 3, "judgment": 1, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I'll be exposed as less talented than I've led people to believe.",
+                    "weights": {"judgment": 3, "comparison": 1, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I measure it against the best work in the field and it doesn't hold up.",
+                    "weights": {"comparison": 4, "judgment": 1, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+            ],
+        },
+    ],
+
+    frozenset({"comparison", "purpose"}): [
+        {
+            "id": "fq_comparison_purpose_1",
+            "text": "When your motivation disappears, what's driving it?",
+            "options": [
+                {
+                    "text": "The work feels redundant — others are doing this and doing it better.",
+                    "weights": {"comparison": 4, "purpose": 0, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I can't find a reason the work needs to exist at all.",
+                    "weights": {"purpose": 4, "comparison": 0, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Both — the space feels saturated AND I don't know why I'd add to it.",
+                    "weights": {"comparison": 2, "purpose": 2, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I struggle to see the value in my contribution specifically.",
+                    "weights": {"comparison": 3, "purpose": 1, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "The work matters in general — I just can't connect to why I'm doing it.",
+                    "weights": {"purpose": 4, "comparison": 0, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+            ],
+        },
+    ],
+
+    frozenset({"imposter_syndrome", "judgment"}): [
+        {
+            "id": "fq_imposter_judgment_1",
+            "text": "When you imagine people seeing your finished work, the fear is:",
+            "options": [
+                {
+                    "text": "They'll realise I don't actually belong in this space.",
+                    "weights": {"imposter_syndrome": 4, "judgment": 0, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "They'll see how bad the work is.",
+                    "weights": {"judgment": 4, "imposter_syndrome": 0, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "They'll think I'm overreaching — trying to do something I'm not credentialed to do.",
+                    "weights": {"imposter_syndrome": 4, "judgment": 1, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "They'll see how far it falls short of what I should be capable of.",
+                    "weights": {"judgment": 3, "imposter_syndrome": 1, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Both — that I'm a fraud AND that the work proves it.",
+                    "weights": {"imposter_syndrome": 2, "judgment": 2, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+            ],
+        },
+    ],
+
+    frozenset({"imposter_syndrome", "purpose"}): [
+        {
+            "id": "fq_imposter_purpose_1",
+            "text": "When you ask yourself 'why am I making this?', the answer that surfaces is:",
+            "options": [
+                {
+                    "text": "I don't know who it's for or why it should exist.",
+                    "weights": {"purpose": 4, "imposter_syndrome": 0, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I want to make it, but I'm not sure I'm the right person to.",
+                    "weights": {"imposter_syndrome": 4, "purpose": 0, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I question both why and whether I have standing to do it.",
+                    "weights": {"imposter_syndrome": 2, "purpose": 2, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "The subject matters — I'm just not sure my voice adds anything to it.",
+                    "weights": {"imposter_syndrome": 3, "purpose": 1, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Even if I knew the purpose, I'd feel unqualified to execute it.",
+                    "weights": {"imposter_syndrome": 4, "purpose": 1, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+            ],
+        },
+    ],
+
+    frozenset({"perfectionism", "judgment"}): [
+        {
+            "id": "fq_perfectionism_judgment_1",
+            "text": "What most often prevents you from calling a piece of work done?",
+            "options": [
+                {
+                    "text": "It hasn't reached the internal standard I've set for it yet.",
+                    "weights": {"perfectionism": 4, "judgment": 0, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I'm afraid of how it'll be received once it's out in the world.",
+                    "weights": {"judgment": 4, "perfectionism": 0, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "There's always one more improvement to make — it's never quite there.",
+                    "weights": {"perfectionism": 4, "judgment": 1, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Finishing means publishing, and publishing means judgement.",
+                    "weights": {"judgment": 3, "perfectionism": 1, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I keep the bar moving — as soon as I reach one standard, I raise it.",
+                    "weights": {"perfectionism": 4, "judgment": 0, "possibility": 0, "skill_gap": 0, "fatigue": 0},
+                },
+            ],
+        },
+    ],
+
+    frozenset({"perfectionism", "skill_gap"}): [
+        {
+            "id": "fq_perfectionism_skill_gap_1",
+            "text": "When your work falls short of what you imagined, your immediate interpretation is:",
+            "options": [
+                {
+                    "text": "I don't have the technical ability to execute it yet — I need to improve.",
+                    "weights": {"skill_gap": 4, "perfectionism": 0, "judgment": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "The standard I'm holding it to is the problem — not the execution.",
+                    "weights": {"perfectionism": 4, "skill_gap": 0, "judgment": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I need more skill AND I refuse to ship anything below my standard.",
+                    "weights": {"skill_gap": 2, "perfectionism": 2, "judgment": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Specific techniques are missing — if I learn them, the quality will meet my standard.",
+                    "weights": {"skill_gap": 3, "perfectionism": 1, "judgment": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I could produce something acceptable but I won't release it at that quality.",
+                    "weights": {"perfectionism": 4, "skill_gap": 1, "judgment": 0, "purpose": 0, "fatigue": 0},
+                },
+            ],
+        },
+    ],
+
+    frozenset({"comparison", "imposter_syndrome"}): [
+        {
+            "id": "fq_comparison_imposter_1",
+            "text": "When you look at others in your creative field, the thought that most holds you back is:",
+            "options": [
+                {
+                    "text": "Their work is so much better — mine doesn't add anything.",
+                    "weights": {"comparison": 4, "imposter_syndrome": 0, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "They actually belong here — I don't.",
+                    "weights": {"imposter_syndrome": 4, "comparison": 0, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "The field is full of people who are more legitimate than I am.",
+                    "weights": {"imposter_syndrome": 3, "comparison": 1, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Why would anyone look at mine when theirs exists?",
+                    "weights": {"comparison": 3, "imposter_syndrome": 1, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "They've earned the right to make; I haven't yet.",
+                    "weights": {"imposter_syndrome": 4, "comparison": 1, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+            ],
+        },
+    ],
+
+    frozenset({"comparison", "perfectionism"}): [
+        {
+            "id": "fq_comparison_perfectionism_1",
+            "text": "The standard you're holding your work to comes from:",
+            "options": [
+                {
+                    "text": "The best work I've seen others produce in this space.",
+                    "weights": {"comparison": 4, "perfectionism": 0, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "An internal ideal I've set for myself, independent of anyone else's work.",
+                    "weights": {"perfectionism": 4, "comparison": 0, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Both — others' best work has shaped what I think my standard should be.",
+                    "weights": {"comparison": 2, "perfectionism": 2, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "The most successful examples in the field — I benchmark against those.",
+                    "weights": {"comparison": 4, "perfectionism": 1, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+                {
+                    "text": "My own previous best — each new work has to exceed the last.",
+                    "weights": {"perfectionism": 4, "comparison": 1, "judgment": 0, "skill_gap": 0, "fatigue": 0},
+                },
+            ],
+        },
+    ],
+
+    frozenset({"imposter_syndrome", "skill_gap"}): [
+        {
+            "id": "fq_imposter_skill_gap_1",
+            "text": "When you feel unqualified to make your project, the main reason is:",
+            "options": [
+                {
+                    "text": "I genuinely lack specific skills I need — it's a real gap, not a feeling.",
+                    "weights": {"skill_gap": 4, "imposter_syndrome": 0, "judgment": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "I have the skills but I don't feel like a legitimate practitioner.",
+                    "weights": {"imposter_syndrome": 4, "skill_gap": 0, "judgment": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Even when I improve my skills, I still feel like I'm pretending.",
+                    "weights": {"imposter_syndrome": 4, "skill_gap": 1, "judgment": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "The gap between my vision and execution makes me feel like a fraud.",
+                    "weights": {"skill_gap": 2, "imposter_syndrome": 2, "judgment": 0, "purpose": 0, "fatigue": 0},
+                },
+                {
+                    "text": "Once I close the skill gap, I'll feel more legitimate.",
+                    "weights": {"skill_gap": 3, "imposter_syndrome": 1, "judgment": 0, "purpose": 0, "fatigue": 0},
                 },
             ],
         },
